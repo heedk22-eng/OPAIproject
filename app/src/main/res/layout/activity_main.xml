@@ -1,34 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<!--
+    앱을 실행했을 때 처음 나타나는 메인 화면
+
+    기능
+    1. 분실물 등록
+    2. 습득물 등록
+    3. 물품 목록 조회
+-->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="30dp">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fitsSystemWindows="true">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <include layout="@layout/content_main" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
+    <!-- 앱 제목 -->
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="@dimen/fab_margin"
-        android:layout_marginBottom="16dp"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
+        android:text="분실·습득물 관리"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="40dp" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <!-- 분실물 등록 버튼 -->
+    <Button
+        android:id="@+id/btnLostRegister"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="분실물 등록"
+        android:layout_marginBottom="15dp" />
+
+
+    <!-- 습득물 등록 버튼 -->
+    <Button
+        android:id="@+id/btnFoundRegister"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="습득물 등록"
+        android:layout_marginBottom="15dp" />
+
+
+    <!-- 전체 물품 목록 버튼 -->
+    <Button
+        android:id="@+id/btnItemList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="물품 목록" />
+
+</LinearLayout>
