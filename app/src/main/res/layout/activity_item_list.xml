@@ -1,105 +1,293 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    물품 목록 화면
 
-    기능
-    - 전체 목록
-    - 분실물 조회
-    - 습득물 조회
-    - 검색
--->
-
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#F5F6FA">
 
 
-    <!-- 화면 제목 -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="물품 목록"
-        android:textSize="26sp"
-        android:textStyle="bold"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="15dp" />
+    <!-- ================================================= -->
+    <!-- 기존 목록 화면 전체 -->
+    <!-- ================================================= -->
 
-
-    <!-- 검색 영역 -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
 
 
-        <!-- 검색어 입력 -->
-        <EditText
-            android:id="@+id/editSearch"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="물품명 또는 카테고리 검색"
-            android:singleLine="true" />
-
-
-        <!-- 검색 버튼 -->
-        <Button
-            android:id="@+id/btnSearch"
+        <!-- 제목 -->
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="검색" />
+            android:text="물품 목록"
+            android:textColor="#1F2937"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="등록된 분실물과 습득물을 확인하세요."
+            android:textColor="#606978"
+            android:textSize="14sp"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="16dp" />
+
+
+        <!-- ================================================= -->
+        <!-- 검색 -->
+        <!-- ================================================= -->
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="1dp"
+            app:strokeColor="#DDE1EA"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="14dp"
+                android:paddingEnd="8dp">
+
+
+                <EditText
+                    android:id="@+id/editSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:hint="물품명, 장소, 특징 검색"
+                    android:inputType="text"
+                    android:singleLine="true"
+                    android:textSize="15sp"
+                    android:paddingStart="4dp" />
+
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSearch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="검색"
+                    android:textColor="#FFFFFF"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+
+                    app:backgroundTint="@color/button_primary_background"
+                    app:rippleColor="#8195E6"
+                    app:cornerRadius="14dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <!-- ================================================= -->
+        <!-- 전체 / 분실 / 습득 필터 -->
+        <!-- 세 버튼을 같은 크기와 간격으로 배치 -->
+        <!-- ================================================= -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+
+            <!-- 전체 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAll"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+
+                android:text="전체"
+                android:textColor="#25345F"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+
+                app:backgroundTint="@color/button_secondary_background"
+                app:rippleColor="#7D92DF"
+                app:cornerRadius="18dp" />
+
+
+            <!-- 분실 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLost"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+
+                android:layout_marginStart="8dp"
+
+                android:text="분실"
+                android:textColor="#25345F"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+
+                app:backgroundTint="@color/button_secondary_background"
+                app:rippleColor="#7D92DF"
+                app:cornerRadius="18dp" />
+
+
+            <!-- 습득 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFound"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+
+                android:layout_marginStart="8dp"
+
+                android:text="습득"
+                android:textColor="#25345F"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+
+                app:backgroundTint="@color/button_secondary_background"
+                app:rippleColor="#7D92DF"
+                app:cornerRadius="18dp" />
+
+        </LinearLayout>
+
+
+        <!-- ================================================= -->
+        <!-- 카테고리 / 정렬 -->
+        <!-- ================================================= -->
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#DDE1EA"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+
+                <!-- 카테고리 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:orientation="vertical">
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="카테고리"
+                        android:textColor="#606978"
+                        android:textSize="12sp" />
+
+
+                    <Spinner
+                        android:id="@+id/spinnerCategoryFilter"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp" />
+
+                </LinearLayout>
+
+
+                <!-- 정렬 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:orientation="vertical">
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="정렬"
+                        android:textColor="#606978"
+                        android:textSize="12sp" />
+
+
+                    <Spinner
+                        android:id="@+id/spinnerSort"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <!-- ================================================= -->
+        <!-- 물품 목록 -->
+        <!-- ================================================= -->
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="10dp"
+
+            android:clipToPadding="false"
+
+            android:paddingBottom="100dp" />
 
     </LinearLayout>
 
 
-    <!-- 전체 / 분실 / 습득 구분 버튼 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp">
+    <!-- ================================================= -->
+    <!-- 오른쪽 아래 내 등록내역 버튼 -->
+    <!-- ================================================= -->
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMyItems"
+
+        android:layout_width="wrap_content"
+        android:layout_height="56dp"
+
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+
+        android:elevation="8dp"
+
+        android:text="내 등록내역"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+
+        app:backgroundTint="@color/button_primary_background"
+
+        app:rippleColor="#8195E6"
+
+        app:cornerRadius="28dp" />
 
 
-        <!-- 전체 -->
-        <Button
-            android:id="@+id/btnAll"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="전체" />
-
-
-        <!-- 분실 -->
-        <Button
-            android:id="@+id/btnLost"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="분실" />
-
-
-        <!-- 습득 -->
-        <Button
-            android:id="@+id/btnFound"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="습득" />
-
-    </LinearLayout>
-
-
-    <!--
-        실제 물품 목록을 출력하는 RecyclerView
-    -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-</LinearLayout>
+</FrameLayout>

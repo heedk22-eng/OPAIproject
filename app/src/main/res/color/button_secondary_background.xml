@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 비활성화 -->
+    <item
+        android:state_enabled="false"
+        android:color="#ECEEF5" />
+
+    <!-- 누르고 있는 상태 -->
+    <item
+        android:state_pressed="true"
+        android:color="#A9B9F0" />
+
+    <!-- 마우스 올림 -->
+    <item
+        android:state_hovered="true"
+        android:color="#C9D3F8" />
+
+    <!-- 키보드 포커스 -->
+    <item
+        android:state_focused="true"
+        android:color="#C9D3F8" />
+
+    <!-- 기본 -->
+    <item
+        android:color="#E2E7FB" />
+
+</selector>

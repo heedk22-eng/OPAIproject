@@ -6,84 +6,71 @@ import java.util.ArrayList;
 
 
 /*
- * ItemService
- *
- * Activity와 Repository 사이에서
- * 물품 관련 기능을 처리한다.
+ * Activity와 DatabaseHelper 사이에서
+ * 기능을 처리하는 Service 클래스
  */
 public class ItemService {
 
+    private final ItemRepository repository;
 
-    /*
-     * 인터페이스 타입으로 선언
-     *
-     * 실제 객체는 DatabaseHelper이다.
-     */
-    private ItemRepository repository;
+    private final DatabaseHelper databaseHelper;
 
 
-    /*
-     * 생성자
-     */
     public ItemService(Context context) {
 
-        /*
-         * DatabaseHelper가
-         * ItemRepository를 구현하고 있기 때문에
-         * 이런 형태로 사용할 수 있다.
-         */
-        repository =
+        databaseHelper =
                 new DatabaseHelper(
                         context.getApplicationContext()
                 );
+
+        repository =
+                databaseHelper;
     }
 
 
     /*
-     * Item이 정상적인 데이터인지 확인
+     * 필수값 검사
      */
-    public boolean validateItem(Item item) {
+    public boolean validateItem(
+            Item item
+    ) {
 
-        // Item 자체가 없는 경우
         if (item == null) {
+            return false;
+        }
+
+
+        if (item.getName() == null ||
+                item.getName()
+                        .trim()
+                        .isEmpty()) {
 
             return false;
         }
 
 
-        // 물품명 확인
-        if (item.getName() == null
-                || item.getName().trim().isEmpty()) {
+        if (item.getCategory() == null ||
+                item.getCategory()
+                        .trim()
+                        .isEmpty()) {
 
             return false;
         }
 
 
-        // 카테고리 확인
-        if (item.getCategory() == null
-                || item.getCategory()
-                .trim()
-                .isEmpty()) {
+        if (item.getLocation() == null ||
+                item.getLocation()
+                        .trim()
+                        .isEmpty()) {
 
             return false;
         }
 
 
-        // 장소 확인
-        if (item.getLocation() == null
-                || item.getLocation()
-                .trim()
-                .isEmpty()) {
-
-            return false;
-        }
-
-
-        // 날짜 확인
-        if (item.getDate() == null
-                || item.getDate()
-                .trim()
-                .isEmpty()) {
+        if (item.getDate() == null ||
+                item.getDate()
+                        .trim()
+                        .isEmpty()) {
 
             return false;
         }
@@ -94,98 +81,187 @@ public class ItemService {
 
 
     /*
-     * 저장
+     * 등록
      */
-    public boolean saveItem(Item item) {
+    public boolean saveItem(
+            Item item
+    ) {
 
-        // 잘못된 데이터라면 저장하지 않음
         if (!validateItem(item)) {
-
             return false;
         }
 
 
-        /*
-         * insertItem()
-         *
-         * 성공 → 0 이상의 ID
-         * 실패 → -1
-         */
-        long result =
-                repository.insertItem(item);
-
-
-        return result != -1;
+        return repository
+                .insertItem(item) != -1;
     }
 
 
-    /*
-     * 전체 조회
-     */
     public ArrayList<Item> getAllItems() {
 
-        return repository.getAllItems();
+        return repository
+                .getAllItems();
     }
 
 
-    /*
-     * LOST / FOUND 조회
-     */
     public ArrayList<Item> getItemsByType(
             String type
     ) {
 
-        return repository.getItemsByType(type);
+        return repository
+                .getItemsByType(type);
     }
 
 
-    /*
-     * 검색
-     */
     public ArrayList<Item> searchItems(
             String keyword
     ) {
 
-        return repository.searchItems(keyword);
+        return repository
+                .searchItems(keyword);
+    }
+
+
+    public ArrayList<Item> getFilteredItems(
+            String keyword,
+            String type,
+            String category,
+            String sortOrder
+    ) {
+
+        return repository
+                .getFilteredItems(
+                        keyword,
+                        type,
+                        category,
+                        sortOrder
+                );
     }
 
 
     /*
-     * 물품 하나 조회
+     * 상세조회
      */
-    public Item getItem(int id) {
+    public Item getItem(
+            int id
+    ) {
 
-        return repository.getItemById(id);
+        return repository
+                .getItemById(id);
     }
 
 
     /*
      * 수정
      */
-    public boolean updateItem(Item item) {
+    public boolean updateItem(
+            Item item
+    ) {
 
-        // 필수값 검사
         if (!validateItem(item)) {
-
             return false;
         }
 
 
-        /*
-         * 수정된 행이 1개 이상이면 성공
-         */
-        return repository.updateItem(item) > 0;
+        return repository
+                .updateItem(item) > 0;
     }
 
 
     /*
-     * 삭제
+     * 일반 삭제
      */
-    public boolean deleteItem(int id) {
+    public boolean deleteItem(
+            int id
+    ) {
 
-        /*
-         * 삭제된 행이 1개 이상이면 성공
-         */
-        return repository.deleteItem(id) > 0;
+        return repository
+                .deleteItem(id) > 0;
+    }
+
+
+    /*
+     * 연결 가능한 습득물
+     */
+    public ArrayList<Item> getAvailableFoundItems(
+            int lostItemId
+    ) {
+
+        return repository
+                .getAvailableFoundItems(
+                        lostItemId
+                );
+    }
+
+
+    /*
+     * 분실물 ↔ 습득물 연결
+     */
+    public boolean linkItems(
+            int lostItemId,
+            int foundItemId
+    ) {
+
+        return repository
+                .linkItems(
+                        lostItemId,
+                        foundItemId
+                );
+    }
+
+
+    /*
+     * 전달 메모 저장
+     */
+    public boolean saveHandoffNote(
+            int foundItemId,
+            String note
+    ) {
+
+        return repository
+                .saveHandoffNote(
+                        foundItemId,
+                        note
+                );
+    }
+
+
+    /*
+     * 물품 수령 완료
+     */
+    public boolean finishAndDeleteMatchedItems(
+            int lostItemId
+    ) {
+
+        return repository
+                .finishAndDeleteMatchedItems(
+                        lostItemId
+                );
+    }
+
+
+    /*
+     * 사용자 ID → 닉네임
+     */
+    public String getUserNickname(
+            int userId
+    ) {
+
+        return databaseHelper
+                .getNicknameByUserId(
+                        userId
+                );
+    }
+    /*
+     * 현재 사용자가 등록한 물품만 가져오기
+     */
+    public ArrayList<Item> getItemsByUserId(
+            int userId
+    ) {
+
+        return repository
+                .getItemsByUserId(
+                        userId
+                );
     }
 }

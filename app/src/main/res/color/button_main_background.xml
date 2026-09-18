@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 버튼을 누르고 있을 때 : 확실한 파란색 -->
+    <item
+        android:state_pressed="true"
+        android:color="#A9B9F5" />
+
+    <!-- PC에서 마우스를 올렸을 때 -->
+    <item
+        android:state_hovered="true"
+        android:color="#D7DEFA" />
+
+    <!-- 키보드 포커스 -->
+    <item
+        android:state_focused="true"
+        android:color="#D7DEFA" />
+
+    <!-- 평상시 -->
+    <item
+        android:color="#FFFFFF" />
+
+</selector>

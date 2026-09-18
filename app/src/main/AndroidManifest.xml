@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:allowBackup="true"
@@ -12,46 +11,45 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LostFoundApp">
 
-        <!-- 앱을 실행했을 때 가장 먼저 실행되는 화면 -->
+        <!-- 앱 시작 화면 -->
         <activity
-            android:name=".MainActivity"
+            android:name=".NicknameActivity"
             android:exported="true"
-            android:theme="@style/Theme.LostFoundApp"
             android:windowSoftInputMode="adjustResize">
-
             <intent-filter>
-
-                <!-- 앱 시작 Activity -->
                 <action android:name="android.intent.action.MAIN" />
 
-                <!-- 앱 아이콘을 눌렀을 때 실행 -->
                 <category android:name="android.intent.category.LAUNCHER" />
-
             </intent-filter>
-
         </activity>
 
+        <!-- 메인 -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
-        <!-- 분실물 / 습득물 등록 화면 -->
+        <!-- 등록 -->
         <activity
             android:name=".RegisterActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-
-        <!-- 물품 목록 및 검색 화면 -->
+        <!-- 목록 -->
         <activity
             android:name=".ItemListActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-
-        <!-- 물품 상세조회 / 수정 / 삭제 화면 -->
+        <!-- 상세 -->
         <activity
             android:name=".DetailActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-
+        <activity
+            android:name=".button_primary_background"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

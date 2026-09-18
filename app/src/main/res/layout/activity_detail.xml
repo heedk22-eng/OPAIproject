@@ -1,102 +1,366 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    물품 상세정보 화면
-
-    기능
-    - 상세정보 확인
-    - 수정
-    - 삭제
--->
 
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F6F7FB"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="20dp">
 
 
         <!-- 제목 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="물품 상세정보"
-            android:textSize="26sp"
+            android:text="물품 상세"
+            android:textColor="#202124"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="등록된 물품의 상세 정보를 확인하세요."
+            android:textColor="#6B7280"
+            android:textSize="14sp"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="18dp" />
+
+
+        <!-- 이미지 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#E2E6ED"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="16dp">
+
+                <ImageView
+                    android:id="@+id/imagePreview"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    android:background="#F0F2F5"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="물품 사진" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSelectImage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="사진 변경"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:textColor="#25345F"
+                    android:layout_marginTop="12dp"
+                    app:backgroundTint="@color/button_secondary_background"
+                    app:rippleColor="#7D92DF"
+                    app:cornerRadius="14dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <!-- 상태 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#E2E6ED"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/textOwner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="등록자 :"
+                    android:textColor="#6B7280"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/textStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="상태 :"
+                    android:textColor="#4F6BED"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="5dp" />
+
+                <TextView
+                    android:id="@+id/textMatchInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="연결된 물품 없음"
+                    android:textColor="#4B5563"
+                    android:textSize="14sp"
+                    android:layout_marginTop="8dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <!-- 습득물 연결 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnMatchFound"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="습득물 연결"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
             android:textStyle="bold"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="20dp" />
+            android:visibility="gone"
+            android:layout_marginTop="12dp"
+            app:backgroundTint="@color/button_primary_background"
+            app:rippleColor="#8195E6"
+            app:cornerRadius="16dp" />
+
+
+        <!-- 전달 메모 제목 -->
+        <TextView
+            android:id="@+id/textHandoffNoteTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="전달 메모"
+            android:textColor="#202124"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="7dp" />
+
+
+        <!-- 분실자가 보는 전달 메모 -->
+        <TextView
+            android:id="@+id/textHandoffNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="아직 전달 메모가 없습니다."
+            android:textColor="#374151"
+            android:textSize="15sp"
+            android:background="#FFFFFF"
+            android:padding="16dp"
+            android:visibility="gone"
+            android:layout_marginBottom="10dp" />
+
+
+        <!-- 습득자 메모 작성 -->
+        <EditText
+            android:id="@+id/editHandoffNote"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:gravity="top|start"
+            android:hint="예: 공학관 1층 경비실에 맡겼어요."
+            android:textSize="15sp"
+            android:inputType="textMultiLine"
+            android:background="#FFFFFF"
+            android:padding="14dp"
+            android:visibility="gone" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSaveHandoffNote"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="전달 메모 저장"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:layout_marginTop="8dp"
+            app:backgroundTint="@color/button_primary_background"
+            app:rippleColor="#8195E6"
+            app:cornerRadius="15dp" />
+
+
+        <!-- 최종 수령 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCompleteReturn"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="물품 수령 완료"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:layout_marginTop="12dp"
+            app:backgroundTint="@color/button_primary_background"
+            app:rippleColor="#8195E6"
+            app:cornerRadius="16dp" />
+
+
+        <!-- 물품정보 제목 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="물품 정보"
+            android:textColor="#202124"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="26dp"
+            android:layout_marginBottom="12dp" />
 
 
         <!-- 물품명 -->
-        <EditText
-            android:id="@+id/editName"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="물품명" />
+            android:hint="물품명"
+            app:boxBackgroundMode="outline">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
 
         <!-- 카테고리 -->
-        <EditText
-            android:id="@+id/editCategory"
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="카테고리" />
+            android:text="카테고리"
+            android:textColor="#374151"
+            android:textStyle="bold"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="5dp" />
+
+        <Spinner
+            android:id="@+id/spinnerCategory"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="#FFFFFF"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp" />
 
 
         <!-- 색상 -->
-        <EditText
-            android:id="@+id/editColor"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="색상" />
+            android:hint="색상"
+            android:layout_marginTop="12dp"
+            app:boxBackgroundMode="outline">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editColor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
 
         <!-- 장소 -->
-        <EditText
-            android:id="@+id/editLocation"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="장소" />
+            android:hint="장소"
+            android:layout_marginTop="12dp"
+            app:boxBackgroundMode="outline">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
 
         <!-- 날짜 -->
-        <EditText
-            android:id="@+id/editDate"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="날짜" />
+            android:hint="날짜"
+            android:layout_marginTop="12dp"
+            app:boxBackgroundMode="outline">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="false"
+                android:clickable="true" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
 
         <!-- 특징 -->
-        <EditText
-            android:id="@+id/editDescription"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:gravity="top"
-            android:hint="특징"
-            android:inputType="textMultiLine" />
+            android:layout_height="wrap_content"
+            android:hint="물품 특징"
+            android:layout_marginTop="12dp"
+            app:boxBackgroundMode="outline">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editDescription"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:gravity="top|start"
+                android:inputType="textMultiLine"
+                android:paddingTop="14dp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
 
-        <!-- 수정 버튼 -->
-        <Button
+        <!-- 수정 -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnUpdate"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="수정"
-            android:layout_marginTop="20dp" />
+            android:layout_height="56dp"
+            android:text="수정하기"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            app:backgroundTint="@color/button_primary_background"
+            app:rippleColor="#8195E6"
+            app:cornerRadius="16dp" />
 
 
-        <!-- 삭제 버튼 -->
-        <Button
+        <!-- 삭제 -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDelete"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:text="삭제"
-            android:layout_marginTop="10dp" />
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textColor="#A02D2D"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="30dp"
+            app:backgroundTint="@color/button_danger_background"
+            app:rippleColor="#D77878"
+            app:cornerRadius="16dp" />
 
     </LinearLayout>
 

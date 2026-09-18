@@ -1,54 +1,254 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    앱을 실행했을 때 처음 나타나는 메인 화면
 
-    기능
-    1. 분실물 등록
-    2. 습득물 등록
-    3. 물품 목록 조회
--->
-
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="30dp">
+    android:background="#F6F7FB"
+    android:fillViewport="true">
 
-    <!-- 앱 제목 -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="분실·습득물 관리"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="40dp" />
-
-
-    <!-- 분실물 등록 버튼 -->
-    <Button
-        android:id="@+id/btnLostRegister"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="분실물 등록"
-        android:layout_marginBottom="15dp" />
+        android:orientation="vertical"
+        android:padding="24dp">
 
 
-    <!-- 습득물 등록 버튼 -->
-    <Button
-        android:id="@+id/btnFoundRegister"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="습득물 등록"
-        android:layout_marginBottom="15dp" />
+        <!-- ============================== -->
+        <!-- 앱 이름 -->
+        <!-- ============================== -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lost &amp; Found"
+            android:textColor="#4F6BED"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
 
-    <!-- 전체 물품 목록 버튼 -->
-    <Button
-        android:id="@+id/btnItemList"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="물품 목록" />
+        <!-- ============================== -->
+        <!-- 메인 제목 -->
+        <!-- ============================== -->
 
-</LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="분실·습득물 관리"
+            android:textColor="#202124"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:layout_marginTop="4dp" />
+
+
+        <!-- 현재 사용자 -->
+        <TextView
+            android:id="@+id/textCurrentUser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="현재 사용자 :"
+            android:textColor="#6B7280"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:layout_marginTop="10dp" />
+
+
+        <!-- ============================== -->
+        <!-- 사용자 변경 -->
+        <!-- ============================== -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSwitchUser"
+            android:layout_width="wrap_content"
+            android:layout_height="46dp"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+
+            android:text="사용자 변경"
+            android:textAllCaps="false"
+            android:textColor="#344054"
+            android:textStyle="bold"
+
+            app:backgroundTint="@color/button_main_background"
+            app:rippleColor="#8398EB"
+
+            app:strokeColor="#D5DAE5"
+            app:strokeWidth="1dp"
+
+            app:cornerRadius="14dp" />
+
+
+        <!-- ============================== -->
+        <!-- 안내 카드 -->
+        <!-- ============================== -->
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+
+            app:cardBackgroundColor="#EEF2FF"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="물건을 잃어버렸거나 발견했나요?"
+                    android:textColor="#25345F"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="분실물과 습득물을 등록하고 서로 연결해보세요."
+                    android:textColor="#647198"
+                    android:textSize="14sp"
+                    android:layout_marginTop="7dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <!-- ============================== -->
+        <!-- 빠른 등록 -->
+        <!-- ============================== -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="빠른 등록"
+            android:textColor="#202124"
+            android:textSize="19sp"
+            android:textStyle="bold"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="12dp" />
+
+
+        <!-- ============================== -->
+        <!-- 분실물 등록 -->
+        <!-- ============================== -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLostRegister"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+
+            android:text="🔎  분실물 등록"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:textColor="#344054"
+
+            android:gravity="start|center_vertical"
+            android:paddingStart="20dp"
+
+            app:backgroundTint="@color/button_main_background"
+            app:rippleColor="#8398EB"
+
+            app:strokeColor="#D5DAE5"
+            app:strokeWidth="1dp"
+
+            app:cornerRadius="18dp" />
+
+
+        <!-- ============================== -->
+        <!-- 습득물 등록 -->
+        <!-- ============================== -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFoundRegister"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+
+            android:text="📦  습득물 등록"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:textColor="#344054"
+
+            android:gravity="start|center_vertical"
+            android:paddingStart="20dp"
+
+            android:layout_marginTop="12dp"
+
+            app:backgroundTint="@color/button_main_background"
+            app:rippleColor="#8398EB"
+
+            app:strokeColor="#D5DAE5"
+            app:strokeWidth="1dp"
+
+            app:cornerRadius="18dp" />
+
+
+        <!-- ============================== -->
+        <!-- 목록 -->
+        <!-- ============================== -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="목록"
+            android:textColor="#202124"
+            android:textSize="19sp"
+            android:textStyle="bold"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="12dp" />
+
+
+        <!-- ============================== -->
+        <!-- 물품 목록 -->
+        <!-- ============================== -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnItemList"
+            android:layout_width="match_parent"
+            android:layout_height="68dp"
+
+            android:text="📋  물품 목록 보기"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:textColor="#344054"
+
+            android:gravity="start|center_vertical"
+            android:paddingStart="20dp"
+
+            app:backgroundTint="@color/button_main_background"
+            app:rippleColor="#8398EB"
+
+            app:strokeColor="#D5DAE5"
+            app:strokeWidth="1dp"
+
+            app:cornerRadius="18dp" />
+
+
+        <!-- ============================== -->
+        <!-- 하단 안내 -->
+        <!-- ============================== -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="등록된 물품은 물품 목록에서 검색하고 확인할 수 있습니다."
+            android:textColor="#9CA3AF"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="20dp" />
+
+
+    </LinearLayout>
+
+</ScrollView>

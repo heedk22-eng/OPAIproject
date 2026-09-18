@@ -1,21 +1,14 @@
 package com.iot.lostfoundapp;
 
-
 /*
- * Item
- *
- * 분실물과 습득물 하나의 정보를 저장하는 데이터 클래스
- *
- * type
- * LOST  = 분실물
- * FOUND = 습득물
+ * 분실물 또는 습득물 하나의 정보를 저장하는 데이터 클래스
  */
 public class Item {
 
-    // DB의 고유번호
+    // DB 고유번호
     private int id;
 
-    // LOST 또는 FOUND
+    // LOST = 분실물 / FOUND = 습득물
     private String type;
 
     // 물품명
@@ -27,7 +20,7 @@ public class Item {
     // 색상
     private String color;
 
-    // 장소
+    // 분실/습득 장소
     private String location;
 
     // 날짜
@@ -36,37 +29,26 @@ public class Item {
     // 특징
     private String description;
 
-
     /*
-     * 기본 생성자
+     * SEARCHING = 아직 연결되지 않음
+     * MATCHED   = 분실물과 습득물이 연결됨
      */
+    private String status = "SEARCHING";
+
+    // 갤러리에서 선택한 사진 URI
+    private String imageUri;
+
+    // 이 물품을 등록한 사용자 ID
+    private int userId = -1;
+
+    // 연결된 상대 물품 ID
+    private int matchedItemId = -1;
+
+    // 습득자가 남기는 전달 관련 메모
+    private String handoffNote = "";
+
+
     public Item() {
-
-    }
-
-
-    /*
-     * 모든 값을 한 번에 넣을 수 있는 생성자
-     */
-    public Item(
-            int id,
-            String type,
-            String name,
-            String category,
-            String color,
-            String location,
-            String date,
-            String description
-    ) {
-
-        this.id = id;
-        this.type = type;
-        this.name = name;
-        this.category = category;
-        this.color = color;
-        this.location = location;
-        this.date = date;
-        this.description = description;
     }
 
 
@@ -139,5 +121,50 @@ public class Item {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+
+    public String getImageUri() {
+        return imageUri;
+    }
+
+    public void setImageUri(String imageUri) {
+        this.imageUri = imageUri;
+    }
+
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+
+    public int getMatchedItemId() {
+        return matchedItemId;
+    }
+
+    public void setMatchedItemId(int matchedItemId) {
+        this.matchedItemId = matchedItemId;
+    }
+
+
+    public String getHandoffNote() {
+        return handoffNote;
+    }
+
+    public void setHandoffNote(String handoffNote) {
+        this.handoffNote = handoffNote;
     }
 }

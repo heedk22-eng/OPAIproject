@@ -2,63 +2,62 @@ package com.iot.lostfoundapp;
 
 import java.util.ArrayList;
 
-
 /*
- * ItemRepository
+ * 물품 DB 기능을 정의하는 인터페이스
  *
- * 물품 데이터를 저장하고 조회하기 위해 필요한
- * 데이터베이스 기능을 정의한다.
- *
- * 실제 기능은 DatabaseHelper에서 구현한다.
+ * 실제 구현은 DatabaseHelper가 한다.
  */
 public interface ItemRepository {
+    ArrayList<Item> getItemsByUserId(int userId);
 
-
-    /*
-     * 물품 등록
-     *
-     * 성공하면 새 행의 id
-     * 실패하면 -1
-     */
+    // 물품 등록
     long insertItem(Item item);
 
-
-    /*
-     * 모든 물품 조회
-     */
+    // 전체 물품
     ArrayList<Item> getAllItems();
 
-
-    /*
-     * LOST 또는 FOUND로 구분 조회
-     */
+    // LOST / FOUND 조회
     ArrayList<Item> getItemsByType(String type);
 
-
-    /*
-     * 물품 검색
-     */
+    // 검색
     ArrayList<Item> searchItems(String keyword);
 
+    // 검색 + 필터 + 정렬
+    ArrayList<Item> getFilteredItems(
+            String keyword,
+            String type,
+            String category,
+            String sortOrder
+    );
 
-    /*
-     * ID로 물품 한 개 조회
-     */
+    // 상세조회
     Item getItemById(int id);
 
-
-    /*
-     * 물품정보 수정
-     *
-     * 수정된 행의 개수 반환
-     */
+    // 수정
     int updateItem(Item item);
 
-
-    /*
-     * 물품 삭제
-     *
-     * 삭제된 행의 개수 반환
-     */
+    // 삭제
     int deleteItem(int id);
+
+    // 연결 가능한 습득물 조회
+    ArrayList<Item> getAvailableFoundItems(
+            int lostItemId
+    );
+
+    // 분실물 ↔ 습득물 연결
+    boolean linkItems(
+            int lostItemId,
+            int foundItemId
+    );
+
+    // 습득자의 전달 메모 저장
+    boolean saveHandoffNote(
+            int foundItemId,
+            String note
+    );
+
+    // 실제 수령 완료 후 연결된 두 데이터 삭제
+    boolean finishAndDeleteMatchedItems(
+            int lostItemId
+    );
 }
