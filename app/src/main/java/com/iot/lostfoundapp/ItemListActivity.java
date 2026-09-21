@@ -1,169 +1,157 @@
 package com.iot.lostfoundapp;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Locale;
 
 
 /*
  * 물품 목록 화면
  *
  * 기능
- * 1. 전체 물품 조회
- * 2. 분실물만 조회
- * 3. 습득물만 조회
- * 4. 내가 등록한 물품만 조회
- * 5. 검색
- * 6. 카테고리 필터
- * 7. 최신순 / 오래된순 / 이름순
- * 8. 상세화면 이동
+ *
+ * 1. 전체 / 분실 / 습득 조회
+ * 2. 내 등록내역 조회
+ * 3. 검색
+ * 4. 검색어 X 버튼
+ * 5. 카테고리 필터
+ * 6. 정렬
+ * 7. 필터 초기화
+ * 8. 선택된 필터 표시
+ * 9. 등록 건수 표시
+ * 10. 검색 결과 0건 화면
  */
-public class ItemListActivity
-        extends AppCompatActivity {
+public class ItemListActivity extends AppCompatActivity {
 
 
-    // =========================================
+    // =================================================
     // View
-    // =========================================
+    // =================================================
 
     private EditText editSearch;
 
-    private Button btnSearch;
+    private MaterialButton btnSearch;
+    private MaterialButton btnClearSearch;
 
-    private Button btnAll;
+    private MaterialButton btnAll;
+    private MaterialButton btnLost;
+    private MaterialButton btnFound;
+    private MaterialButton btnMyItems;
 
-    private Button btnLost;
-
-    private Button btnFound;
-
-    private Button btnMyItems;
+    private MaterialButton btnResetFilters;
 
     private Spinner spinnerCategoryFilter;
-
     private Spinner spinnerSort;
 
     private RecyclerView recyclerView;
 
+    private TextView textTotalCount;
+    private TextView textResultCount;
 
-    // =========================================
+    private LinearLayout emptyView;
+
+    private TextView textEmptyTitle;
+    private TextView textEmptyMessage;
+
+
+    // =================================================
     // Adapter / Service
-    // =========================================
+    // =================================================
 
     private ItemAdapter adapter;
 
     private ItemService itemService;
 
 
-    // =========================================
+    // =================================================
     // 현재 사용자
-    // =========================================
+    // =================================================
 
     private int currentUserId;
 
 
-    // =========================================
+    // =================================================
     // 현재 필터 상태
-    // =========================================
+    // =================================================
 
     /*
      * ALL
      * LOST
      * FOUND
      */
-    private String currentType =
-            "ALL";
+    private String currentType = "ALL";
 
 
     /*
      * true
-     * → 현재 사용자가 등록한 물품만 표시
-     *
-     * false
-     * → 전체 사용자 물품 표시
+     * → 현재 로그인한 사용자가 등록한 글만 표시
      */
-    private boolean showMyItemsOnly =
-            false;
+    private boolean showMyItemsOnly = false;
 
 
-    // =========================================
-    // 카테고리
-    // =========================================
+    // =================================================
+    // Spinner 데이터
+    // =================================================
 
     private static final String[] FILTER_CATEGORIES = {
 
             "전체",
-
             "전자기기",
-
             "지갑/카드",
-
             "의류",
-
             "가방",
-
             "문구류",
-
             "열쇠",
-
             "기타"
     };
 
 
-    // =========================================
-    // 정렬
-    // =========================================
-
     private static final String[] SORT_OPTIONS = {
 
             "최신순",
-
             "오래된순",
-
             "이름순"
     };
 
 
-    // =========================================
+    // =================================================
     // onCreate
-    // =========================================
+    // =================================================
 
     @Override
-    protected void onCreate(
-            Bundle savedInstanceState
-    ) {
+    protected void onCreate(Bundle savedInstanceState) {
 
-        /*
-         * 반드시 제일 먼저
-         */
-        super.onCreate(
-                savedInstanceState
-        );
+        super.onCreate(savedInstanceState);
 
-
-        /*
-         * 반드시 findViewById보다 먼저 실행
-         */
         setContentView(
                 R.layout.activity_item_list
         );
 
 
-        // =====================================
+        // =================================================
         // View 연결
-        // =====================================
+        // =================================================
 
         editSearch =
                 findViewById(
@@ -174,6 +162,12 @@ public class ItemListActivity
         btnSearch =
                 findViewById(
                         R.id.btnSearch
+                );
+
+
+        btnClearSearch =
+                findViewById(
+                        R.id.btnClearSearch
                 );
 
 
@@ -201,6 +195,12 @@ public class ItemListActivity
                 );
 
 
+        btnResetFilters =
+                findViewById(
+                        R.id.btnResetFilters
+                );
+
+
         spinnerCategoryFilter =
                 findViewById(
                         R.id.spinnerCategoryFilter
@@ -219,17 +219,47 @@ public class ItemListActivity
                 );
 
 
-        // =====================================
+        textTotalCount =
+                findViewById(
+                        R.id.textTotalCount
+                );
+
+
+        textResultCount =
+                findViewById(
+                        R.id.textResultCount
+                );
+
+
+        emptyView =
+                findViewById(
+                        R.id.emptyView
+                );
+
+
+        textEmptyTitle =
+                findViewById(
+                        R.id.textEmptyTitle
+                );
+
+
+        textEmptyMessage =
+                findViewById(
+                        R.id.textEmptyMessage
+                );
+
+
+        // =================================================
         // Service
-        // =====================================
+        // =================================================
 
         itemService =
                 new ItemService(this);
 
 
-        // =====================================
-        // 현재 로그인 사용자
-        // =====================================
+        // =================================================
+        // 현재 사용자
+        // =================================================
 
         SessionManager sessionManager =
                 new SessionManager(this);
@@ -239,9 +269,6 @@ public class ItemListActivity
                 sessionManager.getUserId();
 
 
-        /*
-         * 혹시 사용자 선택 없이 들어온 경우
-         */
         if (currentUserId == -1) {
 
             Intent intent =
@@ -259,9 +286,9 @@ public class ItemListActivity
         }
 
 
-        // =====================================
+        // =================================================
         // 카테고리 Spinner
-        // =====================================
+        // =================================================
 
         ArrayAdapter<String> categoryAdapter =
                 new ArrayAdapter<>(
@@ -272,8 +299,7 @@ public class ItemListActivity
 
 
         categoryAdapter.setDropDownViewResource(
-                android.R.layout
-                        .simple_spinner_dropdown_item
+                android.R.layout.simple_spinner_dropdown_item
         );
 
 
@@ -282,9 +308,9 @@ public class ItemListActivity
         );
 
 
-        // =====================================
+        // =================================================
         // 정렬 Spinner
-        // =====================================
+        // =================================================
 
         ArrayAdapter<String> sortAdapter =
                 new ArrayAdapter<>(
@@ -295,8 +321,7 @@ public class ItemListActivity
 
 
         sortAdapter.setDropDownViewResource(
-                android.R.layout
-                        .simple_spinner_dropdown_item
+                android.R.layout.simple_spinner_dropdown_item
         );
 
 
@@ -305,9 +330,9 @@ public class ItemListActivity
         );
 
 
-        // =====================================
+        // =================================================
         // RecyclerView
-        // =====================================
+        // =================================================
 
         recyclerView.setLayoutManager(
                 new LinearLayoutManager(this)
@@ -321,9 +346,6 @@ public class ItemListActivity
 
                         new ArrayList<>(),
 
-                        /*
-                         * 물품 클릭
-                         */
                         item ->
                                 openDetail(
                                         item.getId()
@@ -336,9 +358,9 @@ public class ItemListActivity
         );
 
 
-        // =====================================
+        // =================================================
         // 검색
-        // =====================================
+        // =================================================
 
         btnSearch.setOnClickListener(
                 view ->
@@ -346,35 +368,92 @@ public class ItemListActivity
         );
 
 
-        // =====================================
-        // 전체
-        // =====================================
+        // =================================================
+        // 검색어 X 버튼
+        // =================================================
 
-        btnAll.setOnClickListener(
+        btnClearSearch.setOnClickListener(
                 view -> {
 
-                    /*
-                     * 전체 사용자
-                     */
-                    showMyItemsOnly =
-                            false;
-
-
-                    /*
-                     * 모든 타입
-                     */
-                    currentType =
-                            "ALL";
-
+                    editSearch.setText("");
 
                     applyFilters();
                 }
         );
 
 
-        // =====================================
+        /*
+         * 검색어가 있을 때만 X 버튼 표시
+         */
+        editSearch.addTextChangedListener(
+
+                new TextWatcher() {
+
+                    @Override
+                    public void beforeTextChanged(
+                            CharSequence s,
+                            int start,
+                            int count,
+                            int after
+                    ) {
+
+                    }
+
+
+                    @Override
+                    public void onTextChanged(
+                            CharSequence s,
+                            int start,
+                            int before,
+                            int count
+                    ) {
+
+                        if (s.length() > 0) {
+
+                            btnClearSearch.setVisibility(
+                                    View.VISIBLE
+                            );
+
+                        } else {
+
+                            btnClearSearch.setVisibility(
+                                    View.GONE
+                            );
+                        }
+                    }
+
+
+                    @Override
+                    public void afterTextChanged(
+                            Editable s
+                    ) {
+
+                    }
+                }
+        );
+
+
+        // =================================================
+        // 전체
+        // =================================================
+
+        btnAll.setOnClickListener(
+                view -> {
+
+                    showMyItemsOnly =
+                            false;
+
+                    currentType =
+                            "ALL";
+
+                    applyFilters();
+                }
+        );
+
+
+        // =================================================
         // 분실
-        // =====================================
+        // =================================================
 
         btnLost.setOnClickListener(
                 view -> {
@@ -382,19 +461,17 @@ public class ItemListActivity
                     showMyItemsOnly =
                             false;
 
-
                     currentType =
                             "LOST";
-
 
                     applyFilters();
                 }
         );
 
 
-        // =====================================
+        // =================================================
         // 습득
-        // =====================================
+        // =================================================
 
         btnFound.setOnClickListener(
                 view -> {
@@ -402,50 +479,51 @@ public class ItemListActivity
                     showMyItemsOnly =
                             false;
 
-
                     currentType =
                             "FOUND";
-
 
                     applyFilters();
                 }
         );
 
 
-        // =====================================
-        // 내 물품
-        // =====================================
+        // =================================================
+        // 내 등록내역
+        // =================================================
 
         btnMyItems.setOnClickListener(
                 view -> {
 
-                    /*
-                     * 현재 로그인한 사람이 등록한
-                     * LOST + FOUND를 모두 표시
-                     */
                     showMyItemsOnly =
                             true;
 
-
                     currentType =
                             "ALL";
-
 
                     applyFilters();
                 }
         );
 
 
-        // =====================================
+        // =================================================
+        // 필터 초기화
+        // =================================================
+
+        btnResetFilters.setOnClickListener(
+                view ->
+                        resetFilters()
+        );
+
+
+        // =================================================
         // 카테고리 변경
-        // =====================================
+        // =================================================
 
         spinnerCategoryFilter
                 .setOnItemSelectedListener(
 
                         new AdapterView.OnItemSelectedListener() {
 
-
                             @Override
                             public void onItemSelected(
                                     AdapterView<?> parent,
@@ -454,10 +532,6 @@ public class ItemListActivity
                                     long id
                             ) {
 
-                                /*
-                                 * 카테고리를 바꾸면
-                                 * 즉시 다시 조회
-                                 */
                                 applyFilters();
                             }
 
@@ -472,16 +546,15 @@ public class ItemListActivity
                 );
 
 
-        // =====================================
+        // =================================================
         // 정렬 변경
-        // =====================================
+        // =================================================
 
         spinnerSort
                 .setOnItemSelectedListener(
 
                         new AdapterView.OnItemSelectedListener() {
 
-
                             @Override
                             public void onItemSelected(
                                     AdapterView<?> parent,
@@ -490,10 +563,6 @@ public class ItemListActivity
                                     long id
                             ) {
 
-                                /*
-                                 * 정렬 방식을 바꾸면
-                                 * 즉시 다시 조회
-                                 */
                                 applyFilters();
                             }
 
@@ -508,23 +577,69 @@ public class ItemListActivity
                 );
 
 
-        /*
-         * 처음 화면 표시
-         */
+        // =================================================
+        // 처음 화면
+        // =================================================
+
         applyFilters();
     }
 
 
-    // =========================================
+    // =================================================
+    // 필터 초기화
+    // =================================================
+
+    private void resetFilters() {
+
+        /*
+         * 검색어 제거
+         */
+        editSearch.setText("");
+
+
+        /*
+         * 전체 보기
+         */
+        currentType =
+                "ALL";
+
+
+        /*
+         * 내 등록내역 해제
+         */
+        showMyItemsOnly =
+                false;
+
+
+        /*
+         * 카테고리 → 전체
+         */
+        spinnerCategoryFilter.setSelection(
+                0,
+                false
+        );
+
+
+        /*
+         * 정렬 → 최신순
+         */
+        spinnerSort.setSelection(
+                0,
+                false
+        );
+
+
+        applyFilters();
+    }
+
+
+    // =================================================
     // 필터 적용
-    // =========================================
+    // =================================================
 
     private void applyFilters() {
 
-        /*
-         * 아직 Adapter나 Spinner 초기화가
-         * 끝나지 않았다면 실행하지 않음
-         */
+
         if (adapter == null) {
 
             return;
@@ -545,9 +660,9 @@ public class ItemListActivity
         }
 
 
-        // =====================================
+        // =================================================
         // 검색어
-        // =====================================
+        // =================================================
 
         String keyword =
                 editSearch
@@ -556,9 +671,9 @@ public class ItemListActivity
                         .trim();
 
 
-        // =====================================
+        // =================================================
         // 카테고리
-        // =====================================
+        // =================================================
 
         String category =
                 spinnerCategoryFilter
@@ -566,10 +681,6 @@ public class ItemListActivity
                         .toString();
 
 
-        /*
-         * 화면의 "전체"를
-         * DB에서는 "ALL"로 사용
-         */
         if ("전체".equals(category)) {
 
             category =
@@ -577,9 +688,9 @@ public class ItemListActivity
         }
 
 
-        // =====================================
-        // 정렬 방식
-        // =====================================
+        // =================================================
+        // 정렬
+        // =================================================
 
         String selectedSort =
                 spinnerSort
@@ -597,14 +708,12 @@ public class ItemListActivity
             sortOrder =
                     "OLDEST";
 
-
         } else if ("이름순".equals(
                 selectedSort
         )) {
 
             sortOrder =
                     "NAME";
-
 
         } else {
 
@@ -613,22 +722,20 @@ public class ItemListActivity
         }
 
 
-        // =====================================
+        // =================================================
         // 결과 목록
-        // =====================================
+        // =================================================
 
         ArrayList<Item> items;
 
 
-        // =====================================
-        // 내 물품
-        // =====================================
+        // =================================================
+        // 내 등록내역
+        // =================================================
 
         if (showMyItemsOnly) {
 
-            /*
-             * 현재 사용자의 물품 전체를 가져온다.
-             */
+
             ArrayList<Item> myItems =
                     itemService
                             .getItemsByUserId(
@@ -636,22 +743,16 @@ public class ItemListActivity
                             );
 
 
-            /*
-             * 최종 표시 목록
-             */
             items =
                     new ArrayList<>();
 
 
-            /*
-             * 검색어 + 카테고리 검사
-             */
             for (Item item : myItems) {
 
 
-                // -----------------------------
-                // 검색어
-                // -----------------------------
+                // -----------------------------------------
+                // 검색어 검사
+                // -----------------------------------------
 
                 boolean keywordMatch =
 
@@ -686,9 +787,9 @@ public class ItemListActivity
                                 );
 
 
-                // -----------------------------
-                // 카테고리
-                // -----------------------------
+                // -----------------------------------------
+                // 카테고리 검사
+                // -----------------------------------------
 
                 boolean categoryMatch =
 
@@ -703,9 +804,6 @@ public class ItemListActivity
                                 );
 
 
-                /*
-                 * 두 조건 모두 만족
-                 */
                 if (keywordMatch &&
                         categoryMatch) {
 
@@ -716,9 +814,6 @@ public class ItemListActivity
             }
 
 
-            /*
-             * 내 물품 정렬
-             */
             sortMyItems(
                     items,
                     sortOrder
@@ -727,9 +822,6 @@ public class ItemListActivity
 
         } else {
 
-            // =================================
-            // 전체 / 분실 / 습득
-            // =================================
 
             items =
                     itemService
@@ -746,19 +838,278 @@ public class ItemListActivity
         }
 
 
-        // =====================================
+        // =================================================
         // RecyclerView 갱신
-        // =====================================
+        // =================================================
 
         adapter.updateList(
                 items
         );
+
+
+        // =================================================
+        // 화면 추가 정보 갱신
+        // =================================================
+
+        updateFilterButtonStyles();
+
+        updateRegistrationCounts();
+
+        updateResultView(
+                items,
+                keyword,
+                category
+        );
     }
 
 
-    // =========================================
-    // 내 물품 정렬
-    // =========================================
+    // =================================================
+    // 선택된 필터 버튼 색상
+    // =================================================
+
+    private void updateFilterButtonStyles() {
+
+
+        setFilterButtonStyle(
+
+                btnAll,
+
+                !showMyItemsOnly &&
+                        "ALL".equals(
+                                currentType
+                        )
+        );
+
+
+        setFilterButtonStyle(
+
+                btnLost,
+
+                !showMyItemsOnly &&
+                        "LOST".equals(
+                                currentType
+                        )
+        );
+
+
+        setFilterButtonStyle(
+
+                btnFound,
+
+                !showMyItemsOnly &&
+                        "FOUND".equals(
+                                currentType
+                        )
+        );
+
+
+        setFilterButtonStyle(
+
+                btnMyItems,
+
+                showMyItemsOnly
+        );
+    }
+
+
+    /*
+     * selected == true
+     * → 진한 파란색
+     *
+     * false
+     * → 연한 파란색
+     */
+    private void setFilterButtonStyle(
+            MaterialButton button,
+            boolean selected
+    ) {
+
+
+        if (selected) {
+
+            button.setBackgroundTintList(
+
+                    ContextCompat.getColorStateList(
+                            this,
+                            R.color.button_primary_background
+                    )
+            );
+
+
+            button.setTextColor(
+                    Color.WHITE
+            );
+
+
+        } else {
+
+            button.setBackgroundTintList(
+
+                    ContextCompat.getColorStateList(
+                            this,
+                            R.color.button_secondary_background
+                    )
+            );
+
+
+            button.setTextColor(
+                    Color.parseColor(
+                            "#25345F"
+                    )
+            );
+        }
+    }
+
+
+    // =================================================
+    // 전체 / 분실 / 습득 등록 건수
+    // =================================================
+
+    private void updateRegistrationCounts() {
+
+
+        ArrayList<Item> allItems =
+                itemService.getAllItems();
+
+
+        int totalCount = 0;
+
+        int lostCount = 0;
+
+        int foundCount = 0;
+
+
+        if (allItems != null) {
+
+
+            totalCount =
+                    allItems.size();
+
+
+            for (Item item : allItems) {
+
+
+                if ("LOST".equals(
+                        item.getType()
+                )) {
+
+                    lostCount++;
+
+
+                } else if ("FOUND".equals(
+                        item.getType()
+                )) {
+
+                    foundCount++;
+                }
+            }
+        }
+
+
+        String countText =
+
+                "전체 " + totalCount + "건" +
+
+                        " · 분실 " + lostCount + "건" +
+
+                        " · 습득 " + foundCount + "건";
+
+
+        textTotalCount.setText(
+                countText
+        );
+    }
+
+
+    // =================================================
+    // 검색 결과 / 빈 화면
+    // =================================================
+
+    private void updateResultView(
+            ArrayList<Item> items,
+            String keyword,
+            String category
+    ) {
+
+
+        int count =
+                items == null
+                        ? 0
+                        : items.size();
+
+
+        textResultCount.setText(
+                "현재 결과 " + count + "건"
+        );
+
+
+        if (count > 0) {
+
+
+            recyclerView.setVisibility(
+                    View.VISIBLE
+            );
+
+
+            emptyView.setVisibility(
+                    View.GONE
+            );
+
+
+        } else {
+
+
+            recyclerView.setVisibility(
+                    View.GONE
+            );
+
+
+            emptyView.setVisibility(
+                    View.VISIBLE
+            );
+
+
+            /*
+             * 아무것도 등록되지 않은 경우
+             */
+            if (keyword.isEmpty()
+                    &&
+                    "ALL".equals(category)
+                    &&
+                    "ALL".equals(currentType)
+                    &&
+                    !showMyItemsOnly) {
+
+
+                textEmptyTitle.setText(
+                        "아직 등록된 물품이 없습니다"
+                );
+
+
+                textEmptyMessage.setText(
+                        "분실물 또는 습득물을 등록해보세요."
+                );
+
+
+            } else {
+
+
+                textEmptyTitle.setText(
+                        "검색 결과가 없습니다"
+                );
+
+
+                textEmptyMessage.setText(
+                        "검색어나 필터 조건을 변경해보세요."
+                );
+            }
+        }
+    }
+
+
+    // =================================================
+    // 내 등록내역 정렬
+    // =================================================
 
     private void sortMyItems(
             ArrayList<Item> items,
@@ -766,14 +1117,17 @@ public class ItemListActivity
     ) {
 
 
-        /*
-         * 이름순
-         */
+        // =================================================
+        // 이름순
+        // =================================================
+
         if ("NAME".equals(
                 sortOrder
         )) {
 
+
             Collections.sort(
+
                     items,
 
                     new Comparator<Item>() {
@@ -784,22 +1138,28 @@ public class ItemListActivity
                                 Item item2
                         ) {
 
+
                             String name1 =
+
                                     item1.getName() == null
+
                                             ? ""
+
                                             : item1.getName();
 
 
                             String name2 =
+
                                     item2.getName() == null
+
                                             ? ""
+
                                             : item2.getName();
 
 
-                            return name1
-                                    .compareToIgnoreCase(
-                                            name2
-                                    );
+                            return name1.compareToIgnoreCase(
+                                    name2
+                            );
                         }
                     }
             );
@@ -809,18 +1169,17 @@ public class ItemListActivity
         }
 
 
-        /*
-         * 오래된순
-         *
-         * 날짜 형식이
-         * yyyy-MM-dd 이므로
-         * 문자열 비교로 정렬 가능
-         */
+        // =================================================
+        // 오래된순
+        // =================================================
+
         if ("OLDEST".equals(
                 sortOrder
         )) {
 
+
             Collections.sort(
+
                     items,
 
                     new Comparator<Item>() {
@@ -831,21 +1190,25 @@ public class ItemListActivity
                                 Item item2
                         ) {
 
+
                             String date1 =
+
                                     item1.getDate() == null
+
                                             ? ""
+
                                             : item1.getDate();
 
 
                             String date2 =
+
                                     item2.getDate() == null
+
                                             ? ""
+
                                             : item2.getDate();
 
 
-                            /*
-                             * 날짜가 같다면 ID 오름차순
-                             */
                             int result =
                                     date1.compareTo(
                                             date2
@@ -871,10 +1234,12 @@ public class ItemListActivity
         }
 
 
-        /*
-         * 최신순
-         */
+        // =================================================
+        // 최신순
+        // =================================================
+
         Collections.sort(
+
                 items,
 
                 new Comparator<Item>() {
@@ -885,31 +1250,31 @@ public class ItemListActivity
                             Item item2
                     ) {
 
+
                         String date1 =
+
                                 item1.getDate() == null
+
                                         ? ""
+
                                         : item1.getDate();
 
 
                         String date2 =
+
                                 item2.getDate() == null
+
                                         ? ""
+
                                         : item2.getDate();
 
 
-                        /*
-                         * 날짜 내림차순
-                         */
                         int result =
                                 date2.compareTo(
                                         date1
                                 );
 
 
-                        /*
-                         * 같은 날짜라면
-                         * 나중에 등록된 ID를 먼저 표시
-                         */
                         if (result == 0) {
 
                             return Integer.compare(
@@ -926,45 +1291,44 @@ public class ItemListActivity
     }
 
 
-    // =========================================
+    // =================================================
     // 대소문자 무시 검색
-    // =========================================
+    // =================================================
 
     private boolean containsIgnoreCase(
             String text,
             String keyword
     ) {
 
-        /*
-         * DB 값이 NULL인 경우 방지
-         */
-        if (text == null) {
 
-            return false;
-        }
-
-
-        if (keyword == null) {
+        if (text == null ||
+                keyword == null) {
 
             return false;
         }
 
 
         return text
-                .toLowerCase()
+                .toLowerCase(
+                        Locale.ROOT
+                )
                 .contains(
-                        keyword.toLowerCase()
+
+                        keyword.toLowerCase(
+                                Locale.ROOT
+                        )
                 );
     }
 
 
-    // =========================================
-    // 상세화면 이동
-    // =========================================
+    // =================================================
+    // 상세화면
+    // =================================================
 
     private void openDetail(
             int itemId
     ) {
+
 
         Intent intent =
                 new Intent(
@@ -985,9 +1349,9 @@ public class ItemListActivity
     }
 
 
-    // =========================================
-    // 화면으로 다시 돌아왔을 때
-    // =========================================
+    // =================================================
+    // 상세화면에서 다시 돌아왔을 때
+    // =================================================
 
     @Override
     protected void onResume() {
@@ -995,17 +1359,6 @@ public class ItemListActivity
         super.onResume();
 
 
-        /*
-         * 상세화면에서
-         *
-         * 수정
-         * 삭제
-         * 물품 연결
-         * 수령 완료
-         *
-         * 등이 발생했을 수 있으므로
-         * 목록을 다시 읽어온다.
-         */
         if (adapter != null) {
 
             applyFilters();

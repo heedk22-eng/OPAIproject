@@ -10,106 +10,240 @@ import java.util.ArrayList;
 
 
 /*
- * SQLite 실제 처리 클래스
+ * ============================================================
+ * SQLite 데이터베이스 관리 클래스
+ * ============================================================
+ *
+ * 역할
+ *
+ * 1. 사용자 저장 / 조회
+ * 2. 물품 등록 / 조회 / 수정 / 삭제
+ * 3. 검색 / 필터
+ * 4. 사용자별 물품 조회
+ * 5. LOST ↔ FOUND 연결
+ * 6. 전달 메모 저장
+ * 7. 수령 완료 처리
+ * 8. 삭제 실행 취소 복원
+ *
+ * ============================================================
  */
 public class DatabaseHelper
         extends SQLiteOpenHelper
         implements ItemRepository {
 
-    // SQLite DB 파일명
-    private static final String DB_NAME =
-            "lostfound.db";
+
+    // =========================================================
+    // Database
+    // =========================================================
 
     /*
-     * 최종 DB 버전
-     *
-     * 개발 중 구조가 여러 번 변경되었으므로 5 사용
+     * 기존 DatabaseHelper에서 다른 이름을 사용하고 있었다면
+     * 반드시 기존 이름을 그대로 사용할 것
      */
-    private static final int DB_VERSION = 5;
+    private static final String DATABASE_NAME =
+            "lost_found.db";
 
-    // 물품 테이블
-    private static final String TABLE_ITEM =
-            "item";
 
-    // 사용자 테이블
+    /*
+     * 현재 프로젝트 DB 버전
+     */
+    private static final int DATABASE_VERSION =
+            5;
+
+
+    // =========================================================
+    // Table
+    // =========================================================
+
     private static final String TABLE_USER =
             "app_user";
 
 
-    public DatabaseHelper(Context context) {
+    private static final String TABLE_ITEM =
+            "item";
+
+
+    // =========================================================
+    // User Column
+    // =========================================================
+
+    private static final String USER_ID =
+            "id";
+
+
+    private static final String USER_NICKNAME =
+            "nickname";
+
+
+    // =========================================================
+    // Item Column
+    // =========================================================
+
+    private static final String ITEM_ID =
+            "id";
+
+
+    private static final String ITEM_TYPE =
+            "type";
+
+
+    private static final String ITEM_NAME =
+            "name";
+
+
+    private static final String ITEM_CATEGORY =
+            "category";
+
+
+    private static final String ITEM_COLOR =
+            "color";
+
+
+    private static final String ITEM_LOCATION =
+            "location";
+
+
+    private static final String ITEM_DATE =
+            "date";
+
+
+    private static final String ITEM_DESCRIPTION =
+            "description";
+
+
+    private static final String ITEM_STATUS =
+            "status";
+
+
+    private static final String ITEM_IMAGE_URI =
+            "image_uri";
+
+
+    private static final String ITEM_USER_ID =
+            "user_id";
+
+
+    private static final String ITEM_MATCHED_ID =
+            "matched_item_id";
+
+
+    private static final String ITEM_HANDOFF_NOTE =
+            "handoff_note";
+
+
+    // =========================================================
+    // 생성자
+    // =========================================================
+
+    public DatabaseHelper(
+            Context context
+    ) {
 
         super(
                 context,
-                DB_NAME,
+                DATABASE_NAME,
                 null,
-                DB_VERSION
+                DATABASE_VERSION
         );
     }
 
 
-    /*
-     * DB가 처음 생성될 때 실행
-     */
+    // =========================================================
+    // DB 최초 생성
+    // =========================================================
+
     @Override
-    public void onCreate(SQLiteDatabase db) {
-
-        /*
-         * 사용자 테이블
-         *
-         * UNIQUE + COLLATE NOCASE
-         * → 같은 기기에서 닉네임 중복 방지
-         * → abc와 ABC도 같은 닉네임 취급
-         */
-        String userSql =
-                "CREATE TABLE " + TABLE_USER + " (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        "nickname TEXT NOT NULL COLLATE NOCASE UNIQUE" +
-                        ")";
-
-        db.execSQL(userSql);
+    public void onCreate(
+            SQLiteDatabase db
+    ) {
 
 
-        /*
-         * 물품 테이블
-         */
-        String itemSql =
-                "CREATE TABLE " + TABLE_ITEM + " (" +
+        // =====================================================
+        // 사용자 테이블
+        // =====================================================
 
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        String createUserTable =
 
-                        "type TEXT NOT NULL, " +
+                "CREATE TABLE IF NOT EXISTS "
+                        + TABLE_USER
+                        + " ("
 
-                        "name TEXT NOT NULL, " +
+                        + USER_ID
+                        + " INTEGER PRIMARY KEY AUTOINCREMENT, "
 
-                        "category TEXT NOT NULL, " +
+                        + USER_NICKNAME
+                        + " TEXT NOT NULL COLLATE NOCASE UNIQUE"
 
-                        "color TEXT, " +
+                        + ")";
 
-                        "location TEXT NOT NULL, " +
 
-                        "date TEXT NOT NULL, " +
+        db.execSQL(
+                createUserTable
+        );
 
-                        "description TEXT, " +
 
-                        "status TEXT NOT NULL DEFAULT 'SEARCHING', " +
+        // =====================================================
+        // 물품 테이블
+        // =====================================================
 
-                        "image_uri TEXT, " +
+        String createItemTable =
 
-                        "user_id INTEGER, " +
+                "CREATE TABLE IF NOT EXISTS "
+                        + TABLE_ITEM
+                        + " ("
 
-                        "matched_item_id INTEGER, " +
+                        + ITEM_ID
+                        + " INTEGER PRIMARY KEY AUTOINCREMENT, "
 
-                        "handoff_note TEXT" +
+                        + ITEM_TYPE
+                        + " TEXT NOT NULL, "
 
-                        ")";
+                        + ITEM_NAME
+                        + " TEXT NOT NULL, "
 
-        db.execSQL(itemSql);
+                        + ITEM_CATEGORY
+                        + " TEXT NOT NULL, "
+
+                        + ITEM_COLOR
+                        + " TEXT, "
+
+                        + ITEM_LOCATION
+                        + " TEXT NOT NULL, "
+
+                        + ITEM_DATE
+                        + " TEXT NOT NULL, "
+
+                        + ITEM_DESCRIPTION
+                        + " TEXT, "
+
+                        + ITEM_STATUS
+                        + " TEXT NOT NULL DEFAULT 'SEARCHING', "
+
+                        + ITEM_IMAGE_URI
+                        + " TEXT, "
+
+                        + ITEM_USER_ID
+                        + " INTEGER, "
+
+                        + ITEM_MATCHED_ID
+                        + " INTEGER, "
+
+                        + ITEM_HANDOFF_NOTE
+                        + " TEXT"
+
+                        + ")";
+
+
+        db.execSQL(
+                createItemTable
+        );
     }
 
 
-    /*
-     * 기존 DB 버전 업그레이드
-     */
+    // =========================================================
+    // DB 버전 변경
+    // =========================================================
+
     @Override
     public void onUpgrade(
             SQLiteDatabase db,
@@ -117,371 +251,606 @@ public class DatabaseHelper
             int newVersion
     ) {
 
+
         /*
-         * 1 → 2
+         * 기존 데이터를 삭제하지 않고
+         * 필요한 컬럼만 추가하는 방식
          */
-        if (oldVersion < 2) {
+
+
+        // =====================================================
+        // 사용자 테이블이 없으면 생성
+        // =====================================================
+
+        db.execSQL(
+
+                "CREATE TABLE IF NOT EXISTS "
+                        + TABLE_USER
+                        + " ("
+                        + USER_ID
+                        + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        + USER_NICKNAME
+                        + " TEXT NOT NULL COLLATE NOCASE UNIQUE"
+                        + ")"
+        );
+
+
+        // =====================================================
+        // item 테이블이 아예 없다면 생성
+        // =====================================================
+
+        if (!tableExists(
+                db,
+                TABLE_ITEM
+        )) {
+
+
+            String createItemTable =
+
+                    "CREATE TABLE "
+                            + TABLE_ITEM
+                            + " ("
+
+                            + ITEM_ID
+                            + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+
+                            + ITEM_TYPE
+                            + " TEXT NOT NULL, "
+
+                            + ITEM_NAME
+                            + " TEXT NOT NULL, "
+
+                            + ITEM_CATEGORY
+                            + " TEXT NOT NULL, "
+
+                            + ITEM_COLOR
+                            + " TEXT, "
+
+                            + ITEM_LOCATION
+                            + " TEXT NOT NULL, "
+
+                            + ITEM_DATE
+                            + " TEXT NOT NULL, "
+
+                            + ITEM_DESCRIPTION
+                            + " TEXT, "
+
+                            + ITEM_STATUS
+                            + " TEXT NOT NULL DEFAULT 'SEARCHING', "
+
+                            + ITEM_IMAGE_URI
+                            + " TEXT, "
+
+                            + ITEM_USER_ID
+                            + " INTEGER, "
+
+                            + ITEM_MATCHED_ID
+                            + " INTEGER, "
+
+                            + ITEM_HANDOFF_NOTE
+                            + " TEXT"
+
+                            + ")";
+
 
             db.execSQL(
-                    "ALTER TABLE " + TABLE_ITEM +
-                            " ADD COLUMN status TEXT NOT NULL DEFAULT 'SEARCHING'"
+                    createItemTable
             );
 
-            db.execSQL(
-                    "ALTER TABLE " + TABLE_ITEM +
-                            " ADD COLUMN image_uri TEXT"
-            );
+
+            return;
         }
 
 
-        /*
-         * 2 → 3
-         */
-        if (oldVersion < 3) {
+        // =====================================================
+        // 필요한 컬럼만 안전하게 추가
+        // =====================================================
 
-            db.execSQL(
-                    "CREATE TABLE IF NOT EXISTS " +
-                            TABLE_USER + " (" +
-                            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            "nickname TEXT NOT NULL COLLATE NOCASE UNIQUE" +
-                            ")"
-            );
-
-            db.execSQL(
-                    "ALTER TABLE " + TABLE_ITEM +
-                            " ADD COLUMN user_id INTEGER"
-            );
-        }
+        addColumnIfMissing(
+                db,
+                TABLE_ITEM,
+                ITEM_STATUS,
+                "TEXT NOT NULL DEFAULT 'SEARCHING'"
+        );
 
 
-        /*
-         * 3 → 4
-         */
-        if (oldVersion < 4) {
-
-            db.execSQL(
-                    "ALTER TABLE " + TABLE_ITEM +
-                            " ADD COLUMN matched_item_id INTEGER"
-            );
-        }
+        addColumnIfMissing(
+                db,
+                TABLE_ITEM,
+                ITEM_IMAGE_URI,
+                "TEXT"
+        );
 
 
-        /*
-         * 4 → 5
-         */
-        if (oldVersion < 5) {
+        addColumnIfMissing(
+                db,
+                TABLE_ITEM,
+                ITEM_USER_ID,
+                "INTEGER"
+        );
 
-            db.execSQL(
-                    "ALTER TABLE " + TABLE_ITEM +
-                            " ADD COLUMN handoff_note TEXT"
-            );
-        }
+
+        addColumnIfMissing(
+                db,
+                TABLE_ITEM,
+                ITEM_MATCHED_ID,
+                "INTEGER"
+        );
+
+
+        addColumnIfMissing(
+                db,
+                TABLE_ITEM,
+                ITEM_HANDOFF_NOTE,
+                "TEXT"
+        );
     }
 
 
     // =========================================================
-    // 사용자
+    // 사용자 등록
     // =========================================================
 
-    /*
-     * 새 사용자 생성
-     */
-    public long createUser(String nickname) {
+    public int insertUser(
+            String nickname
+    ) {
+
+
+        if (nickname == null
+                ||
+                nickname.trim().isEmpty()) {
+
+
+            return -1;
+        }
+
 
         SQLiteDatabase db =
                 getWritableDatabase();
 
+
         ContentValues values =
                 new ContentValues();
 
+
         values.put(
-                "nickname",
-                nickname
+                USER_NICKNAME,
+                nickname.trim()
         );
 
-        return db.insert(
-                TABLE_USER,
-                null,
-                values
-        );
-    }
 
+        long result =
+                db.insertWithOnConflict(
 
-    /*
-     * 닉네임으로 사용자 조회
-     */
-    public User getUserByNickname(
-            String nickname
-    ) {
+                        TABLE_USER,
 
-        SQLiteDatabase db =
-                getReadableDatabase();
+                        null,
 
-        Cursor cursor =
-                db.rawQuery(
-                        "SELECT * FROM " +
-                                TABLE_USER +
-                                " WHERE nickname = ? COLLATE NOCASE",
+                        values,
 
-                        new String[]{
-                                nickname
-                        }
+                        SQLiteDatabase.CONFLICT_IGNORE
                 );
 
 
-        User user = null;
+        if (result == -1) {
 
-
-        if (cursor.moveToFirst()) {
-
-            user =
-                    new User(
-                            cursor.getInt(
-                                    cursor.getColumnIndexOrThrow("id")
-                            ),
-
-                            cursor.getString(
-                                    cursor.getColumnIndexOrThrow("nickname")
-                            )
-                    );
+            return -1;
         }
 
 
-        cursor.close();
-
-        return user;
+        return (int) result;
     }
 
 
-    /*
-     * 모든 사용자 조회
-     */
+    // =========================================================
+    // 사용자 등록 별칭 메서드
+    // =========================================================
+
+    public int createUser(
+            String nickname
+    ) {
+
+        return insertUser(
+                nickname
+        );
+    }
+
+
+    // =========================================================
+    // 사용자 전체 조회
+    // =========================================================
+
     public ArrayList<User> getAllUsers() {
+
 
         ArrayList<User> users =
                 new ArrayList<>();
 
+
         SQLiteDatabase db =
                 getReadableDatabase();
 
+
         Cursor cursor =
-                db.rawQuery(
-                        "SELECT * FROM " +
-                                TABLE_USER +
-                                " ORDER BY nickname ASC",
-                        null
+                db.query(
+
+                        TABLE_USER,
+
+                        null,
+
+                        null,
+
+                        null,
+
+                        null,
+
+                        null,
+
+                        USER_NICKNAME
+                                + " COLLATE NOCASE ASC"
                 );
 
 
-        while (cursor.moveToNext()) {
+        try {
 
-            users.add(
-                    new User(
-                            cursor.getInt(
-                                    cursor.getColumnIndexOrThrow("id")
-                            ),
 
-                            cursor.getString(
-                                    cursor.getColumnIndexOrThrow("nickname")
-                            )
-                    )
-            );
+            while (cursor.moveToNext()) {
+
+
+                int id =
+                        cursor.getInt(
+
+                                cursor.getColumnIndexOrThrow(
+                                        USER_ID
+                                )
+                        );
+
+
+                String nickname =
+                        cursor.getString(
+
+                                cursor.getColumnIndexOrThrow(
+                                        USER_NICKNAME
+                                )
+                        );
+
+
+                users.add(
+
+                        new User(
+                                id,
+                                nickname
+                        )
+                );
+            }
+
+
+        } finally {
+
+
+            cursor.close();
         }
 
-
-        cursor.close();
 
         return users;
     }
 
 
-    /*
-     * 사용자 ID → 닉네임
-     */
-    public String getNicknameByUserId(
-            int userId
+    // =========================================================
+    // 사용자 ID 조회
+    // =========================================================
+// =========================================================
+// 닉네임으로 사용자 조회
+// =========================================================
+
+    public User getUserByNickname(
+            String nickname
     ) {
 
-        if (userId == -1) {
-            return "알 수 없음";
+        // 닉네임이 비어 있으면 조회하지 않음
+        if (nickname == null ||
+                nickname.trim().isEmpty()) {
+
+            return null;
         }
 
 
         SQLiteDatabase db =
                 getReadableDatabase();
 
+
         Cursor cursor =
-                db.rawQuery(
-                        "SELECT nickname FROM " +
-                                TABLE_USER +
-                                " WHERE id = ?",
+                db.query(
+
+                        TABLE_USER,
+
+                        null,
+
+                        USER_NICKNAME + " = ?",
 
                         new String[]{
-                                String.valueOf(userId)
-                        }
+                                nickname.trim()
+                        },
+
+                        null,
+
+                        null,
+
+                        null
                 );
 
 
-        String nickname =
-                "알 수 없음";
+        try {
+
+            // 해당 닉네임 사용자가 없을 경우
+            if (!cursor.moveToFirst()) {
+
+                return null;
+            }
 
 
-        if (cursor.moveToFirst()) {
+            int id =
+                    cursor.getInt(
 
-            nickname =
-                    cursor.getString(
-                            cursor.getColumnIndexOrThrow("nickname")
+                            cursor.getColumnIndexOrThrow(
+                                    USER_ID
+                            )
                     );
+
+
+            String savedNickname =
+                    cursor.getString(
+
+                            cursor.getColumnIndexOrThrow(
+                                    USER_NICKNAME
+                            )
+                    );
+
+
+            return new User(
+                    id,
+                    savedNickname
+            );
+
+
+        } finally {
+
+            cursor.close();
         }
+    }
+    public User getUserById(
+            int userId
+    ) {
 
 
-        cursor.close();
 
-        return nickname;
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+
+        Cursor cursor =
+                db.query(
+
+                        TABLE_USER,
+
+                        null,
+
+                        USER_ID + " = ?",
+
+                        new String[]{
+                                String.valueOf(
+                                        userId
+                                )
+                        },
+
+                        null,
+
+                        null,
+
+                        null
+                );
+
+
+        try {
+
+
+            if (!cursor.moveToFirst()) {
+
+                return null;
+            }
+
+
+            return new User(
+
+                    cursor.getInt(
+
+                            cursor.getColumnIndexOrThrow(
+                                    USER_ID
+                            )
+                    ),
+
+                    cursor.getString(
+
+                            cursor.getColumnIndexOrThrow(
+                                    USER_NICKNAME
+                            )
+                    )
+            );
+
+
+        } finally {
+
+
+            cursor.close();
+        }
     }
 
 
     // =========================================================
-    // 등록
+    // 사용자 닉네임 조회
     // =========================================================
 
-    @Override
-    public long insertItem(Item item) {
+    public String getUserNickname(
+            int userId
+    ) {
+
+
+        User user =
+                getUserById(
+                        userId
+                );
+
+
+        if (user == null) {
+
+            return "알 수 없음";
+        }
+
+
+        return user.getNickname();
+    }
+
+
+    // =========================================================
+    // 물품 등록
+    // =========================================================
+
+    public boolean insertItem(
+            Item item
+    ) {
+
+
+        if (item == null) {
+
+            return false;
+        }
+
 
         SQLiteDatabase db =
                 getWritableDatabase();
 
+
         ContentValues values =
-                new ContentValues();
+                itemToValues(
+                        item,
+                        false
+                );
 
 
-        values.put(
-                "type",
-                item.getType()
-        );
+        long result =
+                db.insert(
 
-        values.put(
-                "name",
-                item.getName()
-        );
+                        TABLE_ITEM,
 
-        values.put(
-                "category",
-                item.getCategory()
-        );
+                        null,
 
-        values.put(
-                "color",
-                item.getColor()
-        );
-
-        values.put(
-                "location",
-                item.getLocation()
-        );
-
-        values.put(
-                "date",
-                item.getDate()
-        );
-
-        values.put(
-                "description",
-                item.getDescription()
-        );
-
-        values.put(
-                "status",
-                item.getStatus()
-        );
-
-        values.put(
-                "image_uri",
-                item.getImageUri()
-        );
-
-        values.put(
-                "user_id",
-                item.getUserId()
-        );
-
-        values.put(
-                "handoff_note",
-                item.getHandoffNote()
-        );
+                        values
+                );
 
 
-        if (item.getMatchedItemId() == -1) {
-
-            values.putNull(
-                    "matched_item_id"
-            );
-
-        } else {
-
-            values.put(
-                    "matched_item_id",
-                    item.getMatchedItemId()
-            );
-        }
-
-
-        return db.insert(
-                TABLE_ITEM,
-                null,
-                values
-        );
+        return result != -1;
     }
 
 
     // =========================================================
-    // 조회
+    // 전체 물품 조회
     // =========================================================
 
-    @Override
     public ArrayList<Item> getAllItems() {
 
-        return getFilteredItems(
-                "",
-                "ALL",
-                "ALL",
-                "LATEST"
+
+        return queryItems(
+
+                null,
+
+                null,
+
+                ITEM_DATE
+                        + " DESC, "
+                        + ITEM_ID
+                        + " DESC"
         );
     }
 
 
-    @Override
+    // =========================================================
+    // 물품 종류별 조회
+    // =========================================================
+
     public ArrayList<Item> getItemsByType(
             String type
     ) {
 
-        return getFilteredItems(
-                "",
-                type,
-                "ALL",
-                "LATEST"
+
+        return queryItems(
+
+                ITEM_TYPE + " = ?",
+
+                new String[]{
+                        type
+                },
+
+                ITEM_DATE
+                        + " DESC, "
+                        + ITEM_ID
+                        + " DESC"
         );
     }
 
 
-    @Override
+    // =========================================================
+    // 사용자별 등록내역
+    // =========================================================
+
+    public ArrayList<Item> getItemsByUserId(
+            int userId
+    ) {
+
+
+        return queryItems(
+
+                ITEM_USER_ID + " = ?",
+
+                new String[]{
+                        String.valueOf(
+                                userId
+                        )
+                },
+
+                ITEM_DATE
+                        + " DESC, "
+                        + ITEM_ID
+                        + " DESC"
+        );
+    }
+
+
+    // =========================================================
+    // 단순 검색
+    // =========================================================
+
     public ArrayList<Item> searchItems(
             String keyword
     ) {
 
+
         return getFilteredItems(
+
                 keyword,
+
                 "ALL",
+
                 "ALL",
+
                 "LATEST"
         );
     }
 
 
-    /*
-     * 검색 + 분실/습득 + 카테고리 + 정렬
-     */
-    @Override
+    // =========================================================
+    // 검색 + 타입 + 카테고리 + 정렬
+    // =========================================================
+
     public ArrayList<Item> getFilteredItems(
             String keyword,
             String type,
@@ -489,476 +858,297 @@ public class DatabaseHelper
             String sortOrder
     ) {
 
-        ArrayList<Item> itemList =
-                new ArrayList<>();
 
         SQLiteDatabase db =
                 getReadableDatabase();
 
-        StringBuilder sql =
+
+        StringBuilder where =
                 new StringBuilder(
-                        "SELECT * FROM " +
-                                TABLE_ITEM +
-                                " WHERE 1=1"
+                        "1 = 1"
                 );
+
 
         ArrayList<String> args =
                 new ArrayList<>();
 
 
-        /*
-         * 검색
-         *
-         * 물품명 / 카테고리 / 장소 / 특징
-         */
-        if (keyword != null &&
+        // =====================================================
+        // 검색어
+        // =====================================================
+
+        if (keyword != null
+                &&
                 !keyword.trim().isEmpty()) {
 
-            sql.append(
-                    " AND (" +
-                            "name LIKE ? " +
-                            "OR category LIKE ? " +
-                            "OR location LIKE ? " +
-                            "OR description LIKE ?" +
-                            ")"
+
+            where.append(
+
+                    " AND ("
+
+                            + ITEM_NAME
+                            + " LIKE ?"
+
+                            + " OR "
+                            + ITEM_CATEGORY
+                            + " LIKE ?"
+
+                            + " OR "
+                            + ITEM_LOCATION
+                            + " LIKE ?"
+
+                            + " OR "
+                            + ITEM_DESCRIPTION
+                            + " LIKE ?"
+
+                            + ")"
             );
 
 
-            String searchKeyword =
-                    "%" + keyword.trim() + "%";
+            String searchText =
+                    "%"
+                            + keyword.trim()
+                            + "%";
 
-            args.add(searchKeyword);
-            args.add(searchKeyword);
-            args.add(searchKeyword);
-            args.add(searchKeyword);
+
+            args.add(
+                    searchText
+            );
+
+            args.add(
+                    searchText
+            );
+
+            args.add(
+                    searchText
+            );
+
+            args.add(
+                    searchText
+            );
         }
 
 
-        /*
-         * 분실 / 습득
-         */
-        if (type != null &&
-                !"ALL".equals(type)) {
+        // =====================================================
+        // LOST / FOUND
+        // =====================================================
 
-            sql.append(
-                    " AND type = ?"
+        if (type != null
+                &&
+                !"ALL".equals(
+                        type
+                )) {
+
+
+            where.append(
+                    " AND "
+                            + ITEM_TYPE
+                            + " = ?"
             );
 
-            args.add(type);
+
+            args.add(
+                    type
+            );
         }
 
 
-        /*
-         * 카테고리
-         */
-        if (category != null &&
-                !"ALL".equals(category)) {
+        // =====================================================
+        // 카테고리
+        // =====================================================
 
-            sql.append(
-                    " AND category = ?"
+        if (category != null
+                &&
+                !"ALL".equals(
+                        category
+                )) {
+
+
+            where.append(
+                    " AND "
+                            + ITEM_CATEGORY
+                            + " = ?"
             );
 
-            args.add(category);
+
+            args.add(
+                    category
+            );
         }
 
 
-        /*
-         * 정렬
-         */
-        if ("OLDEST".equals(sortOrder)) {
+        // =====================================================
+        // 정렬
+        // =====================================================
 
-            sql.append(
-                    " ORDER BY date ASC, id ASC"
-            );
+        String orderBy;
 
-        } else if ("NAME".equals(sortOrder)) {
 
-            sql.append(
-                    " ORDER BY name COLLATE NOCASE ASC"
-            );
+        if ("OLDEST".equals(
+                sortOrder
+        )) {
+
+
+            orderBy =
+                    ITEM_DATE
+                            + " ASC, "
+                            + ITEM_ID
+                            + " ASC";
+
+
+        } else if ("NAME".equals(
+                sortOrder
+        )) {
+
+
+            orderBy =
+                    ITEM_NAME
+                            + " COLLATE NOCASE ASC";
+
 
         } else {
 
-            sql.append(
-                    " ORDER BY date DESC, id DESC"
-            );
+
+            orderBy =
+                    ITEM_DATE
+                            + " DESC, "
+                            + ITEM_ID
+                            + " DESC";
         }
 
 
         Cursor cursor =
-                db.rawQuery(
-                        sql.toString(),
+                db.query(
+
+                        TABLE_ITEM,
+
+                        null,
+
+                        where.toString(),
+
                         args.toArray(
                                 new String[0]
-                        )
+                        ),
+
+                        null,
+
+                        null,
+
+                        orderBy
                 );
 
 
-        while (cursor.moveToNext()) {
+        ArrayList<Item> result =
+                new ArrayList<>();
 
-            itemList.add(
-                    cursorToItem(cursor)
-            );
+
+        try {
+
+
+            while (cursor.moveToNext()) {
+
+
+                result.add(
+                        cursorToItem(
+                                cursor
+                        )
+                );
+            }
+
+
+        } finally {
+
+
+            cursor.close();
         }
 
 
-        cursor.close();
-
-        return itemList;
+        return result;
     }
 
 
-    /*
-     * ID로 한 개 조회
-     */
-    @Override
-    public Item getItemById(int id) {
+    // =========================================================
+    // ID로 물품 조회
+    // =========================================================
+
+    public Item getItemById(
+            int id
+    ) {
+
 
         SQLiteDatabase db =
                 getReadableDatabase();
 
+
         Cursor cursor =
-                db.rawQuery(
-                        "SELECT * FROM " +
-                                TABLE_ITEM +
-                                " WHERE id = ?",
+                db.query(
+
+                        TABLE_ITEM,
+
+                        null,
+
+                        ITEM_ID + " = ?",
 
                         new String[]{
-                                String.valueOf(id)
-                        }
+                                String.valueOf(
+                                        id
+                                )
+                        },
+
+                        null,
+
+                        null,
+
+                        null
                 );
 
 
-        Item item = null;
+        try {
 
 
-        if (cursor.moveToFirst()) {
+            if (!cursor.moveToFirst()) {
 
-            item =
-                    cursorToItem(cursor);
+                return null;
+            }
+
+
+            return cursorToItem(
+                    cursor
+            );
+
+
+        } finally {
+
+
+            cursor.close();
         }
-
-
-        cursor.close();
-
-        return item;
     }
 
 
     // =========================================================
-    // 수정
+    // getItem 별칭
     // =========================================================
 
-    @Override
-    public int updateItem(Item item) {
+    public Item getItem(
+            int id
+    ) {
 
-        SQLiteDatabase db =
-                getWritableDatabase();
-
-        ContentValues values =
-                new ContentValues();
-
-
-        values.put(
-                "type",
-                item.getType()
-        );
-
-        values.put(
-                "name",
-                item.getName()
-        );
-
-        values.put(
-                "category",
-                item.getCategory()
-        );
-
-        values.put(
-                "color",
-                item.getColor()
-        );
-
-        values.put(
-                "location",
-                item.getLocation()
-        );
-
-        values.put(
-                "date",
-                item.getDate()
-        );
-
-        values.put(
-                "description",
-                item.getDescription()
-        );
-
-        values.put(
-                "status",
-                item.getStatus()
-        );
-
-        values.put(
-                "image_uri",
-                item.getImageUri()
-        );
-
-        values.put(
-                "user_id",
-                item.getUserId()
-        );
-
-        values.put(
-                "handoff_note",
-                item.getHandoffNote()
-        );
-
-
-        if (item.getMatchedItemId() == -1) {
-
-            values.putNull(
-                    "matched_item_id"
-            );
-
-        } else {
-
-            values.put(
-                    "matched_item_id",
-                    item.getMatchedItemId()
-            );
-        }
-
-
-        return db.update(
-                TABLE_ITEM,
-                values,
-                "id = ?",
-                new String[]{
-                        String.valueOf(
-                                item.getId()
-                        )
-                }
+        return getItemById(
+                id
         );
     }
 
 
     // =========================================================
-    // 일반 삭제
+    // 물품 수정
     // =========================================================
 
-    /*
-     * 물품을 일반 삭제하면
-     * 연결된 상대 물품의 연결도 자동 해제한다.
-     */
-    @Override
-    public int deleteItem(int id) {
-
-        Item item =
-                getItemById(id);
+    public boolean updateItem(
+            Item item
+    ) {
 
 
         if (item == null) {
-            return 0;
-        }
-
-
-        SQLiteDatabase db =
-                getWritableDatabase();
-
-        db.beginTransaction();
-
-
-        try {
-
-            /*
-             * 연결된 상대가 있다면
-             * 상대의 연결 상태를 원래대로 되돌린다.
-             */
-            if (item.getMatchedItemId()
-                    != -1) {
-
-                ContentValues unlinkValues =
-                        new ContentValues();
-
-                unlinkValues.putNull(
-                        "matched_item_id"
-                );
-
-                unlinkValues.put(
-                        "status",
-                        "SEARCHING"
-                );
-
-                /*
-                 * 기존 전달 메모도 제거
-                 */
-                unlinkValues.put(
-                        "handoff_note",
-                        ""
-                );
-
-
-                db.update(
-                        TABLE_ITEM,
-                        unlinkValues,
-                        "id = ?",
-                        new String[]{
-                                String.valueOf(
-                                        item.getMatchedItemId()
-                                )
-                        }
-                );
-            }
-
-
-            int result =
-                    db.delete(
-                            TABLE_ITEM,
-                            "id = ?",
-                            new String[]{
-                                    String.valueOf(id)
-                            }
-                    );
-
-
-            if (result > 0) {
-
-                db.setTransactionSuccessful();
-            }
-
-
-            return result;
-
-
-        } finally {
-
-            db.endTransaction();
-        }
-    }
-
-
-    // =========================================================
-    // 연결 가능한 습득물
-    // =========================================================
-
-    @Override
-    public ArrayList<Item> getAvailableFoundItems(
-            int lostItemId
-    ) {
-
-        ArrayList<Item> list =
-                new ArrayList<>();
-
-        SQLiteDatabase db =
-                getReadableDatabase();
-
-
-        Cursor cursor =
-                db.rawQuery(
-
-                        "SELECT * FROM " +
-                                TABLE_ITEM +
-
-                                " WHERE type = 'FOUND'" +
-
-                                " AND matched_item_id IS NULL" +
-
-                                " AND id != ?" +
-
-                                " ORDER BY date DESC, id DESC",
-
-                        new String[]{
-                                String.valueOf(
-                                        lostItemId
-                                )
-                        }
-                );
-
-
-        while (cursor.moveToNext()) {
-
-            list.add(
-                    cursorToItem(cursor)
-            );
-        }
-
-
-        cursor.close();
-
-        return list;
-    }
-
-
-    // =========================================================
-    // LOST ↔ FOUND 연결
-    // =========================================================
-
-    @Override
-    public boolean linkItems(
-            int lostItemId,
-            int foundItemId
-    ) {
-
-        Item lostItem =
-                getItemById(
-                        lostItemId
-                );
-
-        Item foundItem =
-                getItemById(
-                        foundItemId
-                );
-
-
-        if (lostItem == null ||
-                foundItem == null) {
-
-            return false;
-        }
-
-
-        /*
-         * LOST와 FOUND 관계만 가능
-         */
-        if (!"LOST".equals(
-                lostItem.getType()
-        )) {
-
-            return false;
-        }
-
-
-        if (!"FOUND".equals(
-                foundItem.getType()
-        )) {
-
-            return false;
-        }
-
-
-        /*
-         * 이미 연결된 물품은 연결 불가
-         */
-        if (lostItem.getMatchedItemId()
-                != -1) {
-
-            return false;
-        }
-
-
-        if (foundItem.getMatchedItemId()
-                != -1) {
-
-            return false;
-        }
-
-
-        /*
-         * 같은 사용자가 등록한 분실/습득물은 연결하지 않음
-         */
-        if (lostItem.getUserId()
-                == foundItem.getUserId()) {
 
             return false;
         }
@@ -967,153 +1157,26 @@ public class DatabaseHelper
         SQLiteDatabase db =
                 getWritableDatabase();
 
-        db.beginTransaction();
-
-
-        try {
-
-            /*
-             * LOST 쪽
-             */
-            ContentValues lostValues =
-                    new ContentValues();
-
-            lostValues.put(
-                    "matched_item_id",
-                    foundItemId
-            );
-
-            lostValues.put(
-                    "status",
-                    "MATCHED"
-            );
-
-
-            int lostResult =
-                    db.update(
-                            TABLE_ITEM,
-                            lostValues,
-                            "id = ?",
-                            new String[]{
-                                    String.valueOf(
-                                            lostItemId
-                                    )
-                            }
-                    );
-
-
-            /*
-             * FOUND 쪽
-             */
-            ContentValues foundValues =
-                    new ContentValues();
-
-            foundValues.put(
-                    "matched_item_id",
-                    lostItemId
-            );
-
-            foundValues.put(
-                    "status",
-                    "MATCHED"
-            );
-
-
-            int foundResult =
-                    db.update(
-                            TABLE_ITEM,
-                            foundValues,
-                            "id = ?",
-                            new String[]{
-                                    String.valueOf(
-                                            foundItemId
-                                    )
-                            }
-                    );
-
-
-            if (lostResult > 0 &&
-                    foundResult > 0) {
-
-                db.setTransactionSuccessful();
-
-                return true;
-            }
-
-
-        } finally {
-
-            db.endTransaction();
-        }
-
-
-        return false;
-    }
-
-
-    // =========================================================
-    // 전달 메모
-    // =========================================================
-
-    @Override
-    public boolean saveHandoffNote(
-            int foundItemId,
-            String note
-    ) {
-
-        Item foundItem =
-                getItemById(
-                        foundItemId
-                );
-
-
-        if (foundItem == null) {
-
-            return false;
-        }
-
-
-        /*
-         * FOUND에만 메모 작성 가능
-         */
-        if (!"FOUND".equals(
-                foundItem.getType()
-        )) {
-
-            return false;
-        }
-
-
-        /*
-         * 연결된 상태에서만 작성 가능
-         */
-        if (foundItem.getMatchedItemId()
-                == -1) {
-
-            return false;
-        }
-
-
-        SQLiteDatabase db =
-                getWritableDatabase();
 
         ContentValues values =
-                new ContentValues();
-
-        values.put(
-                "handoff_note",
-                note
-        );
+                itemToValues(
+                        item,
+                        false
+                );
 
 
         int result =
                 db.update(
+
                         TABLE_ITEM,
+
                         values,
-                        "id = ?",
+
+                        ITEM_ID + " = ?",
+
                         new String[]{
                                 String.valueOf(
-                                        foundItemId
+                                        item.getId()
                                 )
                         }
                 );
@@ -1121,100 +1184,182 @@ public class DatabaseHelper
 
         return result > 0;
     }
-    /*
-     * 특정 사용자가 등록한 물품만 조회
-     */
-    @Override
-    public ArrayList<Item> getItemsByUserId(
-            int userId
-    ) {
 
-        ArrayList<Item> itemList =
-                new ArrayList<>();
+
+    // =========================================================
+    // 물품 삭제
+    // =========================================================
+
+    public boolean deleteItem(
+            int itemId
+    ) {
 
 
         SQLiteDatabase db =
-                getReadableDatabase();
+                getWritableDatabase();
 
 
-        Cursor cursor =
-                db.rawQuery(
-                        "SELECT * FROM " +
-                                TABLE_ITEM +
-                                " WHERE user_id = ?" +
-                                " ORDER BY date DESC, id DESC",
+        db.beginTransaction();
 
-                        new String[]{
-                                String.valueOf(userId)
-                        }
+
+        try {
+
+
+            // =================================================
+            // 삭제 전 물품 조회
+            // =================================================
+
+            Item item =
+                    getItemFromDatabase(
+
+                            db,
+
+                            itemId
+                    );
+
+
+            if (item == null) {
+
+                return false;
+            }
+
+
+            int matchedItemId =
+                    item.getMatchedItemId();
+
+
+            // =================================================
+            // 연결된 상대방이 있으면 연결 해제
+            // =================================================
+
+            if (matchedItemId != -1) {
+
+
+                ContentValues matchedValues =
+                        new ContentValues();
+
+
+                matchedValues.put(
+                        ITEM_STATUS,
+                        "SEARCHING"
                 );
 
 
-        while (cursor.moveToNext()) {
+                matchedValues.putNull(
+                        ITEM_MATCHED_ID
+                );
 
-            itemList.add(
-                    cursorToItem(cursor)
-            );
+
+                matchedValues.putNull(
+                        ITEM_HANDOFF_NOTE
+                );
+
+
+                db.update(
+
+                        TABLE_ITEM,
+
+                        matchedValues,
+
+                        ITEM_ID + " = ?",
+
+                        new String[]{
+                                String.valueOf(
+                                        matchedItemId
+                                )
+                        }
+                );
+            }
+
+
+            // =================================================
+            // 현재 물품 삭제
+            // =================================================
+
+            int deletedRows =
+                    db.delete(
+
+                            TABLE_ITEM,
+
+                            ITEM_ID + " = ?",
+
+                            new String[]{
+                                    String.valueOf(
+                                            itemId
+                                    )
+                            }
+                    );
+
+
+            if (deletedRows <= 0) {
+
+                return false;
+            }
+
+
+            db.setTransactionSuccessful();
+
+
+            return true;
+
+
+        } finally {
+
+
+            db.endTransaction();
         }
-
-
-        cursor.close();
-
-
-        return itemList;
     }
 
+
     // =========================================================
-    // 물품 수령 완료
+    // 연결 가능한 습득물 조회
     // =========================================================
 
-    /*
-     * 분실자가 실제 물건을 받았으면
-     * 연결된 LOST와 FOUND 모두 삭제
-     */
-    @Override
-    public boolean finishAndDeleteMatchedItems(
+    public ArrayList<Item> getAvailableFoundItems(
             int lostItemId
     ) {
 
-        Item lostItem =
-                getItemById(
-                        lostItemId
-                );
+
+        /*
+         * 연결되지 않은 FOUND만 조회
+         */
+        return queryItems(
+
+                ITEM_TYPE
+                        + " = ?"
+                        + " AND "
+                        + ITEM_STATUS
+                        + " = ?"
+                        + " AND "
+                        + ITEM_MATCHED_ID
+                        + " IS NULL",
+
+                new String[]{
+
+                        "FOUND",
+
+                        "SEARCHING"
+                },
+
+                ITEM_DATE
+                        + " DESC, "
+                        + ITEM_ID
+                        + " DESC"
+        );
+    }
 
 
-        if (lostItem == null) {
+    // =========================================================
+    // LOST ↔ FOUND 연결
+    // =========================================================
 
-            return false;
-        }
-
-
-        if (!"LOST".equals(
-                lostItem.getType()
-        )) {
-
-            return false;
-        }
+    public boolean linkItems(
+            int lostItemId,
+            int foundItemId
+    ) {
 
 
-        if (lostItem.getMatchedItemId()
-                == -1) {
-
-            return false;
-        }
-
-
-        int foundItemId =
-                lostItem.getMatchedItemId();
-
-
-        Item foundItem =
-                getItemById(
-                        foundItemId
-                );
-
-
-        if (foundItem == null) {
+        if (lostItemId == foundItemId) {
 
             return false;
         }
@@ -1223,15 +1368,128 @@ public class DatabaseHelper
         SQLiteDatabase db =
                 getWritableDatabase();
 
+
         db.beginTransaction();
 
 
         try {
 
+
+            Item lostItem =
+                    getItemFromDatabase(
+
+                            db,
+
+                            lostItemId
+                    );
+
+
+            Item foundItem =
+                    getItemFromDatabase(
+
+                            db,
+
+                            foundItemId
+                    );
+
+
+            // =================================================
+            // 존재 여부
+            // =================================================
+
+            if (lostItem == null
+                    ||
+                    foundItem == null) {
+
+
+                return false;
+            }
+
+
+            // =================================================
+            // LOST / FOUND 확인
+            // =================================================
+
+            if (!"LOST".equals(
+                    lostItem.getType()
+            )) {
+
+
+                return false;
+            }
+
+
+            if (!"FOUND".equals(
+                    foundItem.getType()
+            )) {
+
+
+                return false;
+            }
+
+
+            // =================================================
+            // 같은 사용자가 등록한 물품은 연결하지 않음
+            // =================================================
+
+            if (lostItem.getUserId()
+                    ==
+                    foundItem.getUserId()) {
+
+
+                return false;
+            }
+
+
+            // =================================================
+            // 이미 연결된 물품인지 확인
+            // =================================================
+
+            if (lostItem.getMatchedItemId()
+                    != -1) {
+
+
+                return false;
+            }
+
+
+            if (foundItem.getMatchedItemId()
+                    != -1) {
+
+
+                return false;
+            }
+
+
+            // =================================================
+            // LOST 업데이트
+            // =================================================
+
+            ContentValues lostValues =
+                    new ContentValues();
+
+
+            lostValues.put(
+                    ITEM_STATUS,
+                    "MATCHED"
+            );
+
+
+            lostValues.put(
+                    ITEM_MATCHED_ID,
+                    foundItemId
+            );
+
+
             int lostResult =
-                    db.delete(
+                    db.update(
+
                             TABLE_ITEM,
-                            "id = ?",
+
+                            lostValues,
+
+                            ITEM_ID + " = ?",
+
                             new String[]{
                                     String.valueOf(
                                             lostItemId
@@ -1240,10 +1498,35 @@ public class DatabaseHelper
                     );
 
 
+            // =================================================
+            // FOUND 업데이트
+            // =================================================
+
+            ContentValues foundValues =
+                    new ContentValues();
+
+
+            foundValues.put(
+                    ITEM_STATUS,
+                    "MATCHED"
+            );
+
+
+            foundValues.put(
+                    ITEM_MATCHED_ID,
+                    lostItemId
+            );
+
+
             int foundResult =
-                    db.delete(
+                    db.update(
+
                             TABLE_ITEM,
-                            "id = ?",
+
+                            foundValues,
+
+                            ITEM_ID + " = ?",
+
                             new String[]{
                                     String.valueOf(
                                             foundItemId
@@ -1252,22 +1535,718 @@ public class DatabaseHelper
                     );
 
 
-            if (lostResult > 0 &&
-                    foundResult > 0) {
+            if (lostResult <= 0
+                    ||
+                    foundResult <= 0) {
 
-                db.setTransactionSuccessful();
 
-                return true;
+                return false;
+            }
+
+
+            db.setTransactionSuccessful();
+
+
+            return true;
+
+
+        } finally {
+
+
+            db.endTransaction();
+        }
+    }
+
+
+    // =========================================================
+    // 전달 메모 저장
+    // =========================================================
+
+    public boolean saveHandoffNote(
+            int itemId,
+            String note
+    ) {
+
+
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+
+        Item item =
+                getItemFromDatabase(
+
+                        db,
+
+                        itemId
+                );
+
+
+        if (item == null) {
+
+            return false;
+        }
+
+
+        /*
+         * 전달 메모는 FOUND에만 저장
+         */
+        if (!"FOUND".equals(
+                item.getType()
+        )) {
+
+
+            return false;
+        }
+
+
+        ContentValues values =
+                new ContentValues();
+
+
+        values.put(
+                ITEM_HANDOFF_NOTE,
+                note
+        );
+
+
+        int result =
+                db.update(
+
+                        TABLE_ITEM,
+
+                        values,
+
+                        ITEM_ID + " = ?",
+
+                        new String[]{
+                                String.valueOf(
+                                        itemId
+                                )
+                        }
+                );
+
+
+        return result > 0;
+    }
+
+
+    // =========================================================
+    // 수령 완료
+    // =========================================================
+
+    public boolean finishAndDeleteMatchedItems(
+            int lostItemId
+    ) {
+
+
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+
+        db.beginTransaction();
+
+
+        try {
+
+
+            Item lostItem =
+                    getItemFromDatabase(
+
+                            db,
+
+                            lostItemId
+                    );
+
+
+            // =================================================
+            // LOST 존재 확인
+            // =================================================
+
+            if (lostItem == null) {
+
+                return false;
+            }
+
+
+            if (!"LOST".equals(
+                    lostItem.getType()
+            )) {
+
+
+                return false;
+            }
+
+
+            int foundItemId =
+                    lostItem.getMatchedItemId();
+
+
+            // =================================================
+            // 연결 물품 존재 여부
+            // =================================================
+
+            if (foundItemId == -1) {
+
+                return false;
+            }
+
+
+            Item foundItem =
+                    getItemFromDatabase(
+
+                            db,
+
+                            foundItemId
+                    );
+
+
+            if (foundItem == null) {
+
+                return false;
+            }
+
+
+            // =================================================
+            // LOST 삭제
+            // =================================================
+
+            int lostDelete =
+                    db.delete(
+
+                            TABLE_ITEM,
+
+                            ITEM_ID + " = ?",
+
+                            new String[]{
+                                    String.valueOf(
+                                            lostItemId
+                                    )
+                            }
+                    );
+
+
+            // =================================================
+            // FOUND 삭제
+            // =================================================
+
+            int foundDelete =
+                    db.delete(
+
+                            TABLE_ITEM,
+
+                            ITEM_ID + " = ?",
+
+                            new String[]{
+                                    String.valueOf(
+                                            foundItemId
+                                    )
+                            }
+                    );
+
+
+            if (lostDelete <= 0
+                    ||
+                    foundDelete <= 0) {
+
+
+                return false;
+            }
+
+
+            db.setTransactionSuccessful();
+
+
+            return true;
+
+
+        } finally {
+
+
+            db.endTransaction();
+        }
+    }
+
+
+    // =========================================================
+    // 삭제 실행 취소
+    // =========================================================
+
+    public boolean restoreDeletedItem(
+            Item deletedItem,
+            Item matchedItemBeforeDelete
+    ) {
+
+
+        if (deletedItem == null) {
+
+            return false;
+        }
+
+
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+
+        db.beginTransaction();
+
+
+        try {
+
+
+            // =================================================
+            // 이미 같은 ID가 존재하면 복원 실패
+            // =================================================
+
+            Item existing =
+                    getItemFromDatabase(
+
+                            db,
+
+                            deletedItem.getId()
+                    );
+
+
+            if (existing != null) {
+
+                return false;
+            }
+
+
+            // =================================================
+            // 삭제된 물품 원래 ID 그대로 복원
+            // =================================================
+
+            ContentValues values =
+                    itemToValues(
+
+                            deletedItem,
+
+                            true
+                    );
+
+
+            long insertResult =
+                    db.insert(
+
+                            TABLE_ITEM,
+
+                            null,
+
+                            values
+                    );
+
+
+            if (insertResult == -1) {
+
+                return false;
+            }
+
+
+            // =================================================
+            // 연결 상대의 기존 상태 복원
+            // =================================================
+
+            if (matchedItemBeforeDelete != null) {
+
+
+                ContentValues matchedValues =
+                        new ContentValues();
+
+
+                matchedValues.put(
+                        ITEM_STATUS,
+                        matchedItemBeforeDelete
+                                .getStatus()
+                );
+
+
+                if (matchedItemBeforeDelete
+                        .getMatchedItemId()
+                        == -1) {
+
+
+                    matchedValues.putNull(
+                            ITEM_MATCHED_ID
+                    );
+
+
+                } else {
+
+
+                    matchedValues.put(
+
+                            ITEM_MATCHED_ID,
+
+                            matchedItemBeforeDelete
+                                    .getMatchedItemId()
+                    );
+                }
+
+
+                if (matchedItemBeforeDelete
+                        .getHandoffNote()
+                        == null) {
+
+
+                    matchedValues.putNull(
+                            ITEM_HANDOFF_NOTE
+                    );
+
+
+                } else {
+
+
+                    matchedValues.put(
+
+                            ITEM_HANDOFF_NOTE,
+
+                            matchedItemBeforeDelete
+                                    .getHandoffNote()
+                    );
+                }
+
+
+                int updateResult =
+                        db.update(
+
+                                TABLE_ITEM,
+
+                                matchedValues,
+
+                                ITEM_ID + " = ?",
+
+                                new String[]{
+                                        String.valueOf(
+
+                                                matchedItemBeforeDelete
+                                                        .getId()
+                                        )
+                                }
+                        );
+
+
+                if (updateResult <= 0) {
+
+                    return false;
+                }
+            }
+
+
+            db.setTransactionSuccessful();
+
+
+            return true;
+
+
+        } finally {
+
+
+            db.endTransaction();
+        }
+    }
+
+
+    // =========================================================
+    // Item → ContentValues
+    // =========================================================
+
+    private ContentValues itemToValues(
+            Item item,
+            boolean includeId
+    ) {
+
+
+        ContentValues values =
+                new ContentValues();
+
+
+        // =====================================================
+        // 삭제 복원에서는 기존 ID까지 넣음
+        // =====================================================
+
+        if (includeId) {
+
+
+            values.put(
+                    ITEM_ID,
+                    item.getId()
+            );
+        }
+
+
+        values.put(
+                ITEM_TYPE,
+                item.getType()
+        );
+
+
+        values.put(
+                ITEM_NAME,
+                item.getName()
+        );
+
+
+        values.put(
+                ITEM_CATEGORY,
+                item.getCategory()
+        );
+
+
+        values.put(
+                ITEM_COLOR,
+                item.getColor()
+        );
+
+
+        values.put(
+                ITEM_LOCATION,
+                item.getLocation()
+        );
+
+
+        values.put(
+                ITEM_DATE,
+                item.getDate()
+        );
+
+
+        values.put(
+                ITEM_DESCRIPTION,
+                item.getDescription()
+        );
+
+
+        // =====================================================
+        // 상태
+        // =====================================================
+
+        String status =
+                item.getStatus();
+
+
+        if (status == null
+                ||
+                status.trim().isEmpty()) {
+
+
+            status =
+                    "SEARCHING";
+        }
+
+
+        values.put(
+                ITEM_STATUS,
+                status
+        );
+
+
+        // =====================================================
+        // 이미지 URI
+        // =====================================================
+
+        if (item.getImageUri() == null) {
+
+
+            values.putNull(
+                    ITEM_IMAGE_URI
+            );
+
+
+        } else {
+
+
+            values.put(
+                    ITEM_IMAGE_URI,
+                    item.getImageUri()
+            );
+        }
+
+
+        // =====================================================
+        // 사용자 ID
+        // =====================================================
+
+        if (item.getUserId() == -1) {
+
+
+            values.putNull(
+                    ITEM_USER_ID
+            );
+
+
+        } else {
+
+
+            values.put(
+                    ITEM_USER_ID,
+                    item.getUserId()
+            );
+        }
+
+
+        // =====================================================
+        // 연결된 물품 ID
+        // =====================================================
+
+        if (item.getMatchedItemId() == -1) {
+
+
+            values.putNull(
+                    ITEM_MATCHED_ID
+            );
+
+
+        } else {
+
+
+            values.put(
+                    ITEM_MATCHED_ID,
+                    item.getMatchedItemId()
+            );
+        }
+
+
+        // =====================================================
+        // 전달 메모
+        // =====================================================
+
+        if (item.getHandoffNote() == null) {
+
+
+            values.putNull(
+                    ITEM_HANDOFF_NOTE
+            );
+
+
+        } else {
+
+
+            values.put(
+                    ITEM_HANDOFF_NOTE,
+                    item.getHandoffNote()
+            );
+        }
+
+
+        return values;
+    }
+
+
+    // =========================================================
+    // 공통 Item 조회
+    // =========================================================
+
+    private ArrayList<Item> queryItems(
+            String selection,
+            String[] selectionArgs,
+            String orderBy
+    ) {
+
+
+        ArrayList<Item> items =
+                new ArrayList<>();
+
+
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+
+        Cursor cursor =
+                db.query(
+
+                        TABLE_ITEM,
+
+                        null,
+
+                        selection,
+
+                        selectionArgs,
+
+                        null,
+
+                        null,
+
+                        orderBy
+                );
+
+
+        try {
+
+
+            while (cursor.moveToNext()) {
+
+
+                items.add(
+                        cursorToItem(
+                                cursor
+                        )
+                );
             }
 
 
         } finally {
 
-            db.endTransaction();
+
+            cursor.close();
         }
 
 
-        return false;
+        return items;
+    }
+
+
+    // =========================================================
+    // 같은 DB Transaction 안에서 Item 조회
+    // =========================================================
+
+    private Item getItemFromDatabase(
+            SQLiteDatabase db,
+            int itemId
+    ) {
+
+
+        Cursor cursor =
+                db.query(
+
+                        TABLE_ITEM,
+
+                        null,
+
+                        ITEM_ID + " = ?",
+
+                        new String[]{
+                                String.valueOf(
+                                        itemId
+                                )
+                        },
+
+                        null,
+
+                        null,
+
+                        null
+                );
+
+
+        try {
+
+
+            if (!cursor.moveToFirst()) {
+
+                return null;
+            }
+
+
+            return cursorToItem(
+                    cursor
+            );
+
+
+        } finally {
+
+
+            cursor.close();
+        }
     }
 
 
@@ -1279,156 +2258,340 @@ public class DatabaseHelper
             Cursor cursor
     ) {
 
-        Item item =
-                new Item();
 
-
-        item.setId(
+        int id =
                 cursor.getInt(
-                        cursor.getColumnIndexOrThrow("id")
-                )
-        );
 
-
-        item.setType(
-                cursor.getString(
-                        cursor.getColumnIndexOrThrow("type")
-                )
-        );
-
-
-        item.setName(
-                cursor.getString(
-                        cursor.getColumnIndexOrThrow("name")
-                )
-        );
-
-
-        item.setCategory(
-                cursor.getString(
-                        cursor.getColumnIndexOrThrow("category")
-                )
-        );
-
-
-        item.setColor(
-                cursor.getString(
-                        cursor.getColumnIndexOrThrow("color")
-                )
-        );
-
-
-        item.setLocation(
-                cursor.getString(
-                        cursor.getColumnIndexOrThrow("location")
-                )
-        );
-
-
-        item.setDate(
-                cursor.getString(
-                        cursor.getColumnIndexOrThrow("date")
-                )
-        );
-
-
-        item.setDescription(
-                cursor.getString(
-                        cursor.getColumnIndexOrThrow("description")
-                )
-        );
-
-
-        item.setStatus(
-                cursor.getString(
-                        cursor.getColumnIndexOrThrow("status")
-                )
-        );
-
-
-        item.setImageUri(
-                cursor.getString(
-                        cursor.getColumnIndexOrThrow("image_uri")
-                )
-        );
-
-
-        /*
-         * user_id
-         */
-        int userIndex =
-                cursor.getColumnIndex(
-                        "user_id"
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_ID
+                        )
                 );
 
 
-        if (userIndex != -1 &&
-                !cursor.isNull(userIndex)) {
+        String type =
+                cursor.getString(
 
-            item.setUserId(
-                    cursor.getInt(
-                            userIndex
-                    )
-            );
-
-        } else {
-
-            item.setUserId(
-                    -1
-            );
-        }
-
-
-        /*
-         * matched_item_id
-         */
-        int matchedIndex =
-                cursor.getColumnIndex(
-                        "matched_item_id"
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_TYPE
+                        )
                 );
 
 
-        if (matchedIndex != -1 &&
-                !cursor.isNull(matchedIndex)) {
+        String name =
+                cursor.getString(
 
-            item.setMatchedItemId(
-                    cursor.getInt(
-                            matchedIndex
-                    )
-            );
-
-        } else {
-
-            item.setMatchedItemId(
-                    -1
-            );
-        }
-
-
-        /*
-         * 전달 메모
-         */
-        int noteIndex =
-                cursor.getColumnIndex(
-                        "handoff_note"
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_NAME
+                        )
                 );
 
 
-        if (noteIndex != -1 &&
-                !cursor.isNull(noteIndex)) {
+        String category =
+                cursor.getString(
 
-            item.setHandoffNote(
-                    cursor.getString(
-                            noteIndex
-                    )
-            );
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_CATEGORY
+                        )
+                );
 
-        } else {
 
-            item.setHandoffNote("");
+        String color =
+                cursor.getString(
+
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_COLOR
+                        )
+                );
+
+
+        String location =
+                cursor.getString(
+
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_LOCATION
+                        )
+                );
+
+
+        String date =
+                cursor.getString(
+
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_DATE
+                        )
+                );
+
+
+        String description =
+                cursor.getString(
+
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_DESCRIPTION
+                        )
+                );
+
+
+        String status =
+                cursor.getString(
+
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_STATUS
+                        )
+                );
+
+
+        String imageUri =
+                cursor.getString(
+
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_IMAGE_URI
+                        )
+                );
+
+
+        // =====================================================
+        // user_id
+        // =====================================================
+
+        int userIdColumn =
+                cursor.getColumnIndexOrThrow(
+                        ITEM_USER_ID
+                );
+
+
+        int userId =
+
+                cursor.isNull(
+                        userIdColumn
+                )
+
+                        ? -1
+
+                        : cursor.getInt(
+                        userIdColumn
+                );
+
+
+        // =====================================================
+        // matched_item_id
+        // =====================================================
+
+        int matchedColumn =
+                cursor.getColumnIndexOrThrow(
+                        ITEM_MATCHED_ID
+                );
+
+
+        int matchedItemId =
+
+                cursor.isNull(
+                        matchedColumn
+                )
+
+                        ? -1
+
+                        : cursor.getInt(
+                        matchedColumn
+                );
+
+
+        // =====================================================
+        // handoff_note
+        // =====================================================
+
+        String handoffNote =
+                cursor.getString(
+
+                        cursor.getColumnIndexOrThrow(
+                                ITEM_HANDOFF_NOTE
+                        )
+                );
+
+
+        /*
+         * 현재 프로젝트의 Item 전체 필드
+         *
+         * id
+         * type
+         * name
+         * category
+         * color
+         * location
+         * date
+         * description
+         * status
+         * imageUri
+         * userId
+         * matchedItemId
+         * handoffNote
+         */
+        return new Item(
+
+                id,
+
+                type,
+
+                name,
+
+                category,
+
+                color,
+
+                location,
+
+                date,
+
+                description,
+
+                status,
+
+                imageUri,
+
+                userId,
+
+                matchedItemId,
+
+                handoffNote
+        );
+    }
+
+
+    // =========================================================
+    // 테이블 존재 여부
+    // =========================================================
+
+    private boolean tableExists(
+            SQLiteDatabase db,
+            String tableName
+    ) {
+
+
+        Cursor cursor =
+                db.rawQuery(
+
+                        "SELECT name "
+                                +
+                                "FROM sqlite_master "
+                                +
+                                "WHERE type='table' "
+                                +
+                                "AND name=?",
+
+                        new String[]{
+                                tableName
+                        }
+                );
+
+
+        try {
+
+
+            return cursor.moveToFirst();
+
+
+        } finally {
+
+
+            cursor.close();
+        }
+    }
+
+
+    // =========================================================
+    // 컬럼 존재 여부
+    // =========================================================
+
+    private boolean columnExists(
+            SQLiteDatabase db,
+            String tableName,
+            String columnName
+    ) {
+
+
+        Cursor cursor =
+                db.rawQuery(
+
+                        "PRAGMA table_info("
+                                + tableName
+                                + ")",
+
+                        null
+                );
+
+
+        try {
+
+
+            int nameIndex =
+                    cursor.getColumnIndex(
+                            "name"
+                    );
+
+
+            while (cursor.moveToNext()) {
+
+
+                String name =
+                        cursor.getString(
+                                nameIndex
+                        );
+
+
+                if (columnName.equals(
+                        name
+                )) {
+
+
+                    return true;
+                }
+            }
+
+
+            return false;
+
+
+        } finally {
+
+
+            cursor.close();
+        }
+    }
+
+
+    // =========================================================
+    // 없는 컬럼만 추가
+    // =========================================================
+
+    private void addColumnIfMissing(
+            SQLiteDatabase db,
+            String tableName,
+            String columnName,
+            String definition
+    ) {
+
+
+        if (columnExists(
+
+                db,
+
+                tableName,
+
+                columnName
+        )) {
+
+
+            return;
         }
 
 
-        return item;
+        db.execSQL(
+
+                "ALTER TABLE "
+                        + tableName
+                        + " ADD COLUMN "
+                        + columnName
+                        + " "
+                        + definition
+        );
     }
 }

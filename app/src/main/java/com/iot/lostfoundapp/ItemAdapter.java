@@ -15,21 +15,31 @@ import java.util.ArrayList;
 
 
 public class ItemAdapter
-        extends RecyclerView.Adapter<
-        ItemAdapter.ItemViewHolder> {
+        extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
+
 
     private final Context context;
 
-    private final ArrayList<Item> itemList;
+    private ArrayList<Item> itemList;
 
     private final OnItemClickListener listener;
 
 
+    // =================================================
+    // 클릭 인터페이스
+    // =================================================
+
     public interface OnItemClickListener {
 
-        void onItemClick(Item item);
+        void onItemClick(
+                Item item
+        );
     }
 
+
+    // =================================================
+    // 생성자
+    // =================================================
 
     public ItemAdapter(
             Context context,
@@ -48,12 +58,17 @@ public class ItemAdapter
     }
 
 
+    // =================================================
+    // ViewHolder 생성
+    // =================================================
+
     @NonNull
     @Override
     public ItemViewHolder onCreateViewHolder(
             @NonNull ViewGroup parent,
             int viewType
     ) {
+
 
         View view =
                 LayoutInflater
@@ -71,11 +86,16 @@ public class ItemAdapter
     }
 
 
+    // =================================================
+    // 데이터 표시
+    // =================================================
+
     @Override
     public void onBindViewHolder(
             @NonNull ItemViewHolder holder,
             int position
     ) {
+
 
         Item item =
                 itemList.get(
@@ -83,197 +103,281 @@ public class ItemAdapter
                 );
 
 
-        /*
-         * 분실 / 습득
-         */
-        if ("LOST".equals(
-                item.getType()
-        )) {
-
-            holder.textType
-                    .setText(
-                            "분실"
-                    );
-
-        } else {
-
-            holder.textType
-                    .setText(
-                            "습득"
-                    );
-        }
-
-
-        holder.textName
-                .setText(
-                        item.getName()
-                );
-
+        // =================================================
+        // 사진
+        // =================================================
 
         /*
-         * 상태
+         * RecyclerView 재사용 때문에
+         * 먼저 무조건 기본 이미지 설정
          */
-        String statusText;
+        holder.imageItem.setImageResource(
+                R.drawable.ic_item_placeholder
+        );
 
 
-        if ("MATCHED".equals(
-                item.getStatus()
-        )) {
-
-            if ("LOST".equals(
-                    item.getType()
-            )) {
-
-                statusText =
-                        "습득물 확인";
-
-            } else {
-
-                statusText =
-                        "분실자 확인";
-            }
-
-        } else {
-
-            if ("LOST".equals(
-                    item.getType()
-            )) {
-
-                statusText =
-                        "찾는 중";
-
-            } else {
-
-                statusText =
-                        "보관 중";
-            }
-        }
-
-
-        holder.textStatus
-                .setText(
-                        "상태 : " +
-                                statusText
-                );
-
-
-        holder.textCategory
-                .setText(
-                        "카테고리 : " +
-                                item.getCategory()
-                );
-
-
-        holder.textLocation
-                .setText(
-                        "장소 : " +
-                                item.getLocation()
-                );
-
-
-        holder.textDate
-                .setText(
-                        "날짜 : " +
-                                item.getDate()
-                );
-
-
-        /*
-         * 사진
-         */
         String imageUri =
                 item.getImageUri();
 
 
         if (imageUri != null &&
-                !imageUri.isEmpty()) {
+                !imageUri.trim().isEmpty()) {
+
 
             try {
 
-                holder.imageItem
-                        .setImageURI(
-                                Uri.parse(
-                                        imageUri
-                                )
-                        );
+                holder.imageItem.setPadding(
+                        0,
+                        0,
+                        0,
+                        0
+                );
+
+
+                holder.imageItem.setImageURI(
+                        Uri.parse(
+                                imageUri
+                        )
+                );
+
 
             } catch (Exception e) {
 
-                holder.imageItem
-                        .setImageResource(
-                                android.R.drawable
-                                        .ic_menu_gallery
-                        );
+
+                showDefaultImage(
+                        holder
+                );
             }
+
 
         } else {
 
-            holder.imageItem
-                    .setImageResource(
-                            android.R.drawable
-                                    .ic_menu_gallery
-                    );
+
+            showDefaultImage(
+                    holder
+            );
         }
 
 
-        /*
-         * 클릭 → 상세
-         */
-        holder.itemView
-                .setOnClickListener(
-                        view -> {
+        // =================================================
+        // 분실 / 습득
+        // =================================================
 
-                            if (listener != null) {
+        if ("LOST".equals(
+                item.getType()
+        )) {
 
-                                listener
-                                        .onItemClick(
-                                                item
-                                        );
-                            }
-                        }
+            holder.textType.setText(
+                    "분실"
+            );
+
+        } else {
+
+            holder.textType.setText(
+                    "습득"
+            );
+        }
+
+
+        // =================================================
+        // 물품명
+        // =================================================
+
+        holder.textName.setText(
+                item.getName()
+        );
+
+
+        // =================================================
+        // 상태
+        // =================================================
+
+        holder.textStatus.setText(
+                getStatusText(
+                        item
+                )
+        );
+
+
+        // =================================================
+        // 기타 정보
+        // =================================================
+
+        holder.textCategory.setText(
+                "카테고리 · " +
+                        safeText(
+                                item.getCategory()
+                        )
+        );
+
+
+        holder.textLocation.setText(
+                "장소 · " +
+                        safeText(
+                                item.getLocation()
+                        )
+        );
+
+
+        holder.textDate.setText(
+                safeText(
+                        item.getDate()
+                )
+        );
+
+
+        // =================================================
+        // 클릭
+        // =================================================
+
+        holder.itemView.setOnClickListener(
+                view -> {
+
+                    if (listener != null) {
+
+                        listener.onItemClick(
+                                item
+                        );
+                    }
+                }
+        );
+    }
+
+
+    // =================================================
+    // 기본 이미지
+    // =================================================
+
+    private void showDefaultImage(
+            ItemViewHolder holder
+    ) {
+
+
+        holder.imageItem.setPadding(
+                15,
+                15,
+                15,
+                15
+        );
+
+
+        holder.imageItem.setImageResource(
+                R.drawable.ic_item_placeholder
+        );
+    }
+
+
+    // =================================================
+    // 상태 한글 표시
+    // =================================================
+
+    private String getStatusText(
+            Item item
+    ) {
+
+
+        boolean matched =
+                "MATCHED".equals(
+                        item.getStatus()
                 );
+
+
+        if ("LOST".equals(
+                item.getType()
+        )) {
+
+
+            if (matched) {
+
+                return "습득물 확인";
+            }
+
+
+            return "찾는 중";
+
+
+        } else {
+
+
+            if (matched) {
+
+                return "분실자 확인";
+            }
+
+
+            return "보관 중";
+        }
     }
 
 
-    @Override
-    public int getItemCount() {
+    // =================================================
+    // NULL 처리
+    // =================================================
 
-        return itemList.size();
+    private String safeText(
+            String text
+    ) {
+
+
+        return text == null
+                ? ""
+                : text;
     }
 
 
-    /*
-     * 목록 갱신
-     */
+    // =================================================
+    // 목록 갱신
+    // =================================================
+
     public void updateList(
             ArrayList<Item> newList
     ) {
 
-        itemList.clear();
 
-        itemList.addAll(
-                newList
-        );
+        if (newList == null) {
+
+            itemList =
+                    new ArrayList<>();
+
+        } else {
+
+            itemList =
+                    newList;
+        }
+
 
         notifyDataSetChanged();
     }
 
 
-    public static class ItemViewHolder
+    // =================================================
+    // 개수
+    // =================================================
+
+    @Override
+    public int getItemCount() {
+
+        return itemList == null
+                ? 0
+                : itemList.size();
+    }
+
+
+    // =================================================
+    // ViewHolder
+    // =================================================
+
+    static class ItemViewHolder
             extends RecyclerView.ViewHolder {
+
 
         ImageView imageItem;
 
         TextView textType;
-
         TextView textName;
-
         TextView textStatus;
-
         TextView textCategory;
-
         TextView textLocation;
-
         TextView textDate;
 
 
@@ -289,30 +393,36 @@ public class ItemAdapter
                             R.id.imageItem
                     );
 
+
             textType =
                     itemView.findViewById(
                             R.id.textType
                     );
+
 
             textName =
                     itemView.findViewById(
                             R.id.textName
                     );
 
+
             textStatus =
                     itemView.findViewById(
                             R.id.textStatus
                     );
+
 
             textCategory =
                     itemView.findViewById(
                             R.id.textCategory
                     );
 
+
             textLocation =
                     itemView.findViewById(
                             R.id.textLocation
                     );
+
 
             textDate =
                     itemView.findViewById(
